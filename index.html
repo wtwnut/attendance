@@ -140,12 +140,68 @@
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#1f2937;color:#fff;padding:12px 18px;border-radius:12px;z-index:70;max-width:90vw;transition:transform .25s;font-size:14px;box-shadow:var(--shadow)}
   .toast.show{transform:translateX(-50%) translateY(0)}
   .toast.err{background:#b91c1c} .toast.ok{background:#15803d}
+
+  /* =================================================================
+   * โหมดพอดีจอ (หน้าเข้างาน / สแกน / ผลลัพธ์)
+   * ทุกขนาดอิงหน่วย --u = 1% ของความสูงจอ แต่ไม่เกินสัดส่วน 10:16
+   * จอแนวตั้ง 10:16 (เช่น แท็บเล็ต 800x1280) จะเห็นครบในหน้าเดียว ไม่ต้องเลื่อน
+   * จอที่ยาวกว่านั้น (มือถือ) ระบบย่อตามความกว้างให้อัตโนมัติ
+   * ===============================================================*/
+  :root{--u:min(1vh,1.6vw)}
+  @supports (height:1dvh){:root{--u:min(1dvh,1.6vw)}}
+  .fit-view.active{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+  .fit-inner{width:100%;max-width:calc(var(--u) * 62.5);margin:0 auto}
+
+  /* ---- หน้าหลัก ---- */
+  #view-home .hero{flex-shrink:0;padding:calc(var(--u)*2.2) calc(var(--u)*2.5) calc(var(--u)*6.5);border-radius:0 0 calc(var(--u)*3) calc(var(--u)*3)}
+  #view-home .hero-top{max-width:calc(var(--u) * 62.5 - var(--u) * 5)}
+  #view-home .company{font-size:max(15px,calc(var(--u)*2.2))}
+  #view-home .hero-sub{font-size:max(12px,calc(var(--u)*1.4))}
+  #view-home .icon-btn{width:max(38px,calc(var(--u)*5));height:max(38px,calc(var(--u)*5));font-size:max(17px,calc(var(--u)*2.3));border-radius:calc(var(--u)*1.4)}
+  #view-home .clock{font-size:calc(var(--u)*8.5);margin-top:calc(var(--u)*1.2);line-height:1.15}
+  #view-home .date{font-size:max(14px,calc(var(--u)*1.9))}
+  #view-home .home-main{flex:1;min-height:0;display:flex;flex-direction:column;margin-top:calc(var(--u)*-5);padding:0 calc(var(--u)*2.2) calc(var(--u)*2)}
+  #view-home .loc-card{flex-shrink:0;padding:calc(var(--u)*1.8);gap:calc(var(--u)*1.5);border-radius:calc(var(--u)*2.2)}
+  #view-home .loc-icon{width:calc(var(--u)*5.6);height:calc(var(--u)*5.6);font-size:calc(var(--u)*2.8);border-radius:calc(var(--u)*1.6)}
+  #view-home .loc-title{font-size:max(14px,calc(var(--u)*1.9));line-height:1.3}
+  #view-home .loc-detail{font-size:max(12px,calc(var(--u)*1.45));line-height:1.4}
+  #view-home .section-title{flex-shrink:0;margin:calc(var(--u)*2.2) calc(var(--u)*.5) calc(var(--u)*1.2);font-size:max(13px,calc(var(--u)*1.7))}
+  #view-home .action-grid{flex:1;min-height:0;grid-template-rows:1fr 1fr;gap:calc(var(--u)*1.6)}
+  #view-home .action-btn{justify-content:center;padding:calc(var(--u)*1.2);gap:calc(var(--u)*.5);border-radius:calc(var(--u)*2.4)}
+  #view-home .action-btn .a-icon{font-size:calc(var(--u)*5)}
+  #view-home .action-btn .a-label{font-size:max(17px,calc(var(--u)*2.9))}
+  #view-home .action-btn .a-sub{font-size:max(12px,calc(var(--u)*1.5))}
+  #view-home .hint{flex-shrink:0;font-size:max(11px,calc(var(--u)*1.35));margin:calc(var(--u)*1.6) 0 0}
+
+  /* ---- หน้าสแกนใบหน้า ---- */
+  #view-scan .scan-header{flex-shrink:0;padding:calc(var(--u)*1.6) calc(var(--u)*2)}
+  #view-scan .scan-title{font-size:max(15px,calc(var(--u)*2));text-align:center;padding:0 8px}
+  #view-scan .icon-btn{width:max(38px,calc(var(--u)*5));height:max(38px,calc(var(--u)*5));font-size:max(17px,calc(var(--u)*2.3));flex-shrink:0}
+  #view-scan .cam-wrap{flex:1;min-height:0;padding:calc(var(--u)*1)}
+  #view-scan .cam-frame{width:auto;height:min(100%,calc(var(--u)*58),106vw);max-width:80vw}
+  #view-scan .cam-ring{border-width:max(4px,calc(var(--u)*.6))}
+  #view-scan .scan-instruction{flex-shrink:0;font-size:max(17px,calc(var(--u)*2.6));min-height:calc(var(--u)*8.5);padding:calc(var(--u)*1) calc(var(--u)*2.5);line-height:1.35;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  #view-scan .scan-steps{flex-shrink:0;gap:calc(var(--u)*.8)}
+  #view-scan .step{font-size:max(12px,calc(var(--u)*1.45));padding:calc(var(--u)*.6) calc(var(--u)*1.3)}
+  #view-scan .scan-meta{flex-shrink:0;font-size:max(12px,calc(var(--u)*1.5));padding:calc(var(--u)*1.6) calc(var(--u)*2) calc(var(--u)*2.4 + env(safe-area-inset-bottom))}
+
+  /* ---- หน้าผลลัพธ์ ---- */
+  #view-result .result-wrap{flex:1;min-height:0;min-height:auto;height:100%;padding:calc(var(--u)*2.2);display:flex;align-items:center}
+  #view-result .result-card{max-height:100%;overflow:auto;padding:calc(var(--u)*3.2) calc(var(--u)*2.8);border-radius:calc(var(--u)*2.4)}
+  #view-result .result-icon{font-size:calc(var(--u)*8);line-height:1.2}
+  #view-result .result-card h2{font-size:max(20px,calc(var(--u)*3.1));margin:calc(var(--u)*.6) 0 calc(var(--u)*.3)}
+  #view-result #result-sub{font-size:max(15px,calc(var(--u)*2))}
+  #view-result .result-details{margin:calc(var(--u)*2.2) 0}
+  #view-result .rd-row{font-size:max(14px,calc(var(--u)*1.75));padding:calc(var(--u)*1.15) 2px}
+  #view-result .chip{font-size:max(12px,calc(var(--u)*1.5));padding:calc(var(--u)*.3) calc(var(--u)*1.1);white-space:normal}
+  #view-result .btn{font-size:max(15px,calc(var(--u)*2));padding:calc(var(--u)*1.6);border-radius:calc(var(--u)*1.5)}
+  #view-result #result-countdown{font-size:max(12px,calc(var(--u)*1.45))!important}
 </style>
 </head>
 <body>
 
 <!-- ======================= หน้าหลัก ======================= -->
-<section id="view-home" class="view active">
+<section id="view-home" class="view fit-view active">
   <header class="hero">
     <div class="hero-top">
       <div>
@@ -157,7 +213,7 @@
     <div class="clock" id="clock-time">--:--:--</div>
     <div class="date" id="clock-date">&nbsp;</div>
   </header>
-  <main class="container home-main">
+  <main class="container fit-inner home-main">
     <div class="card loc-card" id="loc-card">
       <div class="loc-icon" id="loc-icon">📡</div>
       <div class="loc-body">
@@ -179,7 +235,7 @@
 </section>
 
 <!-- ======================= หน้าสแกนใบหน้า ======================= -->
-<section id="view-scan" class="view scan-view">
+<section id="view-scan" class="view fit-view scan-view">
   <div class="scan-header">
     <button class="icon-btn" id="btn-scan-cancel" aria-label="ยกเลิก">✕</button>
     <div class="scan-title" id="scan-title">สแกนใบหน้า</div>
@@ -197,8 +253,8 @@
 </section>
 
 <!-- ======================= หน้าผลลัพธ์ ======================= -->
-<section id="view-result" class="view">
-  <main class="container result-wrap">
+<section id="view-result" class="view fit-view">
+  <main class="container fit-inner result-wrap">
     <div class="card result-card">
       <div class="result-icon" id="result-icon">✅</div>
       <h2 id="result-title"></h2>
