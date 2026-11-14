@@ -296,6 +296,10 @@ const CONFIG = {
   GPS_MAX_AGE_MS: 30000,      // ตำแหน่งต้องไม่เก่ากว่า 30 วินาที
   SAME_FACE_MAX_DIST: 0.55,   // ใบหน้าตอนเริ่ม-ตอนจบสแกนต้องเป็นคนเดียวกัน
   REGISTER_SAMPLES: 3,        // จำนวนตัวอย่างใบหน้าตอนลงทะเบียน
+  // ภารกิจตรวจคนจริง (ระบบจะสุ่มลำดับทุกครั้ง)
+  //   'MOUTH' = อ้าปาก แล้วหุบ   'TURN' = หันหน้าซ้ายหรือขวา แล้วกลับมาตรง
+  //   'BLINK' = หลับตาช้าๆ แล้วลืมตา (ตรวจยากบนมือถือบางรุ่น จึงปิดไว้เป็นค่าเริ่มต้น)
+  LIVENESS_CHALLENGES: ['MOUTH', 'TURN'],
   TZ: 'Asia/Bangkok'
 };
 
@@ -610,12 +614,13 @@ async function openScanner(opts) {
   const s = {
     ...opts, running: true, phase: 'loading', startTime: 0, stable: 0, busy: false,
     challenges: [], idx: 0, refDescriptor: null,
-    earBase: null, earSamples: [], eyeClosed: false, turned: false,
+    earBase: null, earSamples: [], eyeClosed: false, closedFrames: 0, turned: false,
+    mouthOpenFrames: 0, mouthOpened: false,
     samples: [], photo: null, nextSampleAt: 0
   };
   state.scan = s;
   const liveness = s.mode === 'checkin' && state.init && state.init.livenessEnabled;
-  if (liveness) s.challenges = shuffle(['BLINK', 'TURN']);
+  if (liveness) s.challenges = shuffle(CONFIG.LIVENESS_CHALLENGES);
 
   $('#scan-title').textContent = s.mode === 'checkin'
     ? TYPES[s.type].icon + ' ' + TYPES[s.type].label + ' (' + TYPES[s.type].en + ')'
@@ -657,7 +662,7 @@ function renderSteps() {
       steps.push({ label: 'ตัวอย่าง ' + (i + 1), st: i < s.samples.length ? 'done' : (i === s.samples.length ? 'current' : '') });
     }
   } else {
-    const names = { BLINK: '👁️ กะพริบตา', TURN: '↔️ หันหน้า' };
+    const names = { BLINK: '👁️ หลับตา', TURN: '↔️ หันหน้า', MOUTH: '👄 อ้าปาก' };
     steps = [{ label: 'ตรวจจับใบหน้า', st: s.phase === 'face' || s.phase === 'loading' ? 'current' : 'done' }];
     s.challenges.forEach((c, i) => {
       let st = '';
@@ -710,7 +715,14 @@ function analyzeFace(det, video) {
   const yaw = (nose.x - l.x) / ((r.x - l.x) || 1); // ~0.5 = หน้าตรง
   const size = box.width / Math.min(vw, vh);
   const cx = (box.x + box.width / 2) / vw, cy = (box.y + box.height / 2) / vh;
-  return { ear, yaw, size, centered: Math.abs(cx - 0.5) < 0.16 && Math.abs(cy - 0.5) < 0.22 };
+  return { ear, yaw, size, mar: mouthAspectRatio(p), centered: Math.abs(cx - 0.5) < 0.16 && Math.abs(cy - 0.5) < 0.22 };
+}
+
+/** ค่าการอ้าปาก (Mouth Aspect Ratio) จากจุดริมฝีปากด้านใน 60-67: หุบปาก ≈ 0-0.1, อ้าปาก ≈ 0.4 ขึ้นไป */
+function mouthAspectRatio(p) {
+  const d = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const vertical = d(p[61], p[67]) + d(p[62], p[66]) + d(p[63], p[65]);
+  return vertical / (3 * (d(p[60], p[64]) || 1));
 }
 
 function eyeAspectRatio(e) {
@@ -784,18 +796,32 @@ async function handleFrame(s, dets) {
     const c = s.challenges[s.idx];
     let done = false;
     setRing('ok');
-    if (c === 'BLINK') {
-      // เก็บค่า EAR ตอนลืมตาเป็นฐาน แล้วจับจังหวะ ตาปิด ➜ ตาเปิด
+    if (c === 'MOUTH') {
+      // อ้าปากค้าง 2 เฟรมติดกัน ➜ หุบปาก (รูปถ่ายนิ่งทำไม่ได้)
+      if (!s.mouthOpened) {
+        setInstruction('👄 อ้าปากกว้างๆ ค้างไว้ 1 วินาที');
+        s.mouthOpenFrames = a.mar > 0.35 ? s.mouthOpenFrames + 1 : 0;
+        if (s.mouthOpenFrames >= 2) s.mouthOpened = true;
+      } else {
+        setInstruction('ดีมาก! หุบปากได้เลย');
+        if (a.mar < 0.2) done = true;
+      }
+    } else if (c === 'BLINK') {
+      // เก็บค่า EAR ตอนลืมตาเป็นฐาน แล้วจับจังหวะ ตาปิด (ค้าง) ➜ ตาเปิด
       if (s.earBase === null) {
         if (isFrontal(a)) s.earSamples.push(a.ear);
-        setInstruction('👁️ เตรียมกะพริบตา...');
-        if (s.earSamples.length >= 4) s.earBase = median(s.earSamples);
+        setInstruction('👁️ ลืมตามองกล้องตามปกติ...');
+        if (s.earSamples.length >= 6) s.earBase = median(s.earSamples);
         return;
       }
-      if (a.ear > s.earBase && !s.eyeClosed) s.earBase = s.earBase * 0.9 + a.ear * 0.1;
-      setInstruction('👁️ กรุณากะพริบตาช้าๆ 1 ครั้ง');
-      if (!s.eyeClosed && a.ear < s.earBase * 0.75) s.eyeClosed = true;
-      else if (s.eyeClosed && a.ear > s.earBase * 0.88) done = true;
+      setInstruction(s.eyeClosed ? 'ลืมตาได้เลย' : '👁️ หลับตาช้าๆ ค้างไว้ 1 วินาที แล้วลืมตา');
+      const closed = a.ear < s.earBase * 0.82 || a.ear < s.earBase - 0.05;
+      if (!s.eyeClosed) {
+        s.closedFrames = closed ? s.closedFrames + 1 : 0;
+        if (s.closedFrames >= 1) s.eyeClosed = true;
+      } else if (a.ear > s.earBase * 0.9) {
+        done = true;
+      }
     } else if (c === 'TURN') {
       if (!s.turned) {
         setInstruction('↔️ หันหน้าไปด้านซ้ายหรือขวาเล็กน้อย');
@@ -807,7 +833,8 @@ async function handleFrame(s, dets) {
     }
     if (done) {
       s.idx++;
-      s.eyeClosed = false; s.turned = false;
+      s.eyeClosed = false; s.closedFrames = 0; s.turned = false;
+      s.mouthOpenFrames = 0; s.mouthOpened = false;
       if (s.idx >= s.challenges.length) s.phase = 'capture';
       renderSteps();
     }
@@ -816,7 +843,8 @@ async function handleFrame(s, dets) {
 
   if (s.phase === 'capture') {
     const eyesOpen = s.earBase === null || a.ear > s.earBase * 0.85;
-    if (!isFrontal(a) || !eyesOpen) { s.stable = 0; setRing('warn'); setInstruction('มองตรงเข้ากล้อง ลืมตาตามปกติ'); return; }
+    const mouthClosed = a.mar < 0.25;
+    if (!isFrontal(a) || !eyesOpen || !mouthClosed) { s.stable = 0; setRing('warn'); setInstruction('มองตรงเข้ากล้อง หุบปาก ลืมตาตามปกติ'); return; }
     s.stable++;
     setRing('ok');
     setInstruction('ค้างไว้... กำลังยืนยันตัวตน');
