@@ -1289,6 +1289,7 @@ function openLocationForm(loc) {
 
 /* ---------- ตั้งค่าเวลางาน ---------- */
 const SETTING_LABELS = {
+  EMPLOYEE_DB: 'ไฟล์ฐานข้อมูลพนักงาน (ลิงก์หรือ ID)',
   COMPANY_NAME: 'ชื่อบริษัท', WORK_START: 'เวลาเข้างานมาตรฐาน', WORK_END: 'เวลาเลิกงานมาตรฐาน',
   LATE_GRACE_MIN: 'ผ่อนผันมาสาย (นาที)', OT_MIN_MINUTES: 'OT ขั้นต่ำ (นาที)', OT_ROUND_MIN: 'ปัดเศษ OT (นาที)', OT_MAX_MINUTES: 'เพดาน OT ต่อวัน (นาที)', REGULAR_WORK_MIN: 'เวลาทำงานปกติต่อวัน (นาที)', DAY_CUTOFF: 'เวลาตัดรอบวันทำงาน',
   FACE_MATCH_THRESHOLD: 'เกณฑ์ความเหมือนใบหน้า', MAX_GPS_ACCURACY_M: 'ความคลาดเคลื่อน GPS สูงสุด (ม.)',
@@ -1335,26 +1336,50 @@ async function changePin() {
 
 /* ---------- พนักงาน ---------- */
 function renderEmployees() {
-  const list = state.adminData.employees;
-  $('#employee-list').innerHTML = list.length ? list.map(e => `
-    <div class="item">
+  const d = state.adminData, list = d.employees;
+  const master = d.masterMode;
+  // โหมดฐานข้อมูลพนักงาน: รายชื่อมาจากไฟล์ จึงไม่ต้องมีปุ่มเพิ่มพนักงานเอง
+  $('#btn-add-employee').hidden = master;
+  let head = '';
+  if (d.masterError) {
+    head = `<div class="item" style="border-color:#fecaca;background:#fef2f2"><div class="item-title" style="color:var(--red)">⚠️ ดึงรายชื่อจากฐานข้อมูลพนักงานไม่ได้</div><div class="item-sub">${esc(d.masterError)}</div></div>`;
+  } else if (master) {
+    const act = list.filter(e => e.inMaster && e.active);
+    const done = act.filter(e => e.sampleCount > 0).length;
+    head = `<div class="item" style="background:#eef2ff;border-color:#c7d2fe">
+      <div class="item-title">📋 รายชื่อจากไฟล์ฐานข้อมูลพนักงาน</div>
+      <div class="item-sub">ลงทะเบียนใบหน้าแล้ว <b>${done}</b> จาก ${act.length} คนที่ทำงานอยู่ • เพิ่ม/แก้ชื่อพนักงานในไฟล์ <a href="${esc(d.masterUrl)}" target="_blank" rel="noopener">ฐานข้อมูลพนักงาน</a></div>
+    </div>`;
+  }
+  const item = e => {
+    const face = e.sampleCount > 0;
+    const chips = [];
+    if (master && !e.inMaster) chips.push('<span class="chip red">ไม่อยู่ในฐานข้อมูลพนักงาน</span>');
+    else if (master && !e.active) chips.push(`<span class="chip gray">${esc(e.status)}</span>`);
+    chips.push(face ? `<span class="chip green">ใบหน้า ✓ ${e.sampleCount} ตัวอย่าง</span>` : '<span class="chip amber">ยังไม่ลงทะเบียนใบหน้า</span>');
+    const canScan = !master || (e.inMaster && e.active);
+    return `
+    <div class="item"${master && (!e.inMaster || !e.active) ? ' style="opacity:.65"' : ''}>
       <div class="item-top">
         <div>
-          <div class="item-title">👤 ${esc(e.name)} <span class="item-sub">(${esc(e.id)})</span></div>
+          <div class="item-title">👤 ${esc(e.name || '-')} <span class="item-sub">(${esc(e.id)})</span></div>
+          ${e.fullName ? `<div class="item-sub">${esc(e.fullName)}</div>` : ''}
           <div class="item-sub">${esc([e.department, e.position].filter(Boolean).join(' • ') || '-')}</div>
-          <div class="item-sub">ใบหน้า: ${e.sampleCount ? e.sampleCount + ' ตัวอย่าง' : '<b style="color:var(--red)">ยังไม่ลงทะเบียน</b>'} • อัปเดต ${esc(e.updatedAt || '-')}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${chips.join('')}</div>
         </div>
-        <label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap">
-          <input type="checkbox" data-act="active" data-id="${esc(e.id)}" ${e.active ? 'checked' : ''}> ใช้งาน
-        </label>
+        ${master ? '' : `<label class="small" style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+          <input type="checkbox" data-act="active" data-id="${esc(e.id)}" ${e.active ? 'checked' : ''}> ใช้งาน</label>`}
       </div>
       <div class="item-actions">
-        <button class="btn sm" data-act="rescan" data-id="${esc(e.id)}">📷 สแกนใบหน้าใหม่</button>
-        <button class="btn sm" data-act="edit" data-id="${esc(e.id)}">✏️ แก้ไข</button>
+        ${canScan ? `<button class="btn sm ${face ? '' : 'primary'}" data-act="rescan" data-id="${esc(e.id)}">📷 ${face ? 'สแกนใบหน้าใหม่' : 'ลงทะเบียนใบหน้า'}</button>` : ''}
+        ${master ? '' : `<button class="btn sm" data-act="edit" data-id="${esc(e.id)}">✏️ แก้ไข</button>`}
         ${e.photoUrl ? `<a class="btn sm" style="text-decoration:none" href="${esc(e.photoUrl)}" target="_blank" rel="noopener">🖼️ รูป</a>` : ''}
-        <button class="btn sm danger" data-act="delete" data-id="${esc(e.id)}">🗑️ ลบ</button>
+        ${face || !master ? `<button class="btn sm danger" data-act="delete" data-id="${esc(e.id)}">🗑️ ${master ? 'ลบข้อมูลใบหน้า' : 'ลบ'}</button>` : ''}
       </div>
-    </div>`).join('') : '<div class="empty">ยังไม่มีพนักงาน กด "ลงทะเบียนพนักงาน"</div>';
+    </div>`;
+  };
+  $('#employee-list').innerHTML = head + (list.length ? list.map(item).join('') :
+    `<div class="empty">${master ? 'ยังไม่มีรายชื่อในไฟล์ฐานข้อมูลพนักงาน' : 'ยังไม่มีพนักงาน กด "ลงทะเบียนพนักงาน"'}</div>`);
 }
 
 function onEmployeeListClick(ev) {
@@ -1366,7 +1391,9 @@ function onEmployeeListClick(ev) {
   } else if (b.dataset.act === 'edit') {
     openEmployeeForm(emp);
   } else if (b.dataset.act === 'delete') {
-    confirmBox('ลบพนักงาน "' + emp.name + '" ?', 'ข้อมูลใบหน้าจะถูกลบ (ประวัติการลงเวลาเดิมยังอยู่)', async () => {
+    const master = state.adminData.masterMode;
+    confirmBox((master ? 'ลบข้อมูลใบหน้าของ "' : 'ลบพนักงาน "') + emp.name + '" ?',
+      master ? 'คนนี้จะสแกนลงเวลาไม่ได้จนกว่าจะลงทะเบียนใบหน้าใหม่ (รายชื่อในฐานข้อมูลและประวัติลงเวลายังอยู่)' : 'ข้อมูลใบหน้าจะถูกลบ (ประวัติการลงเวลาเดิมยังอยู่)', async () => {
       showLoading('กำลังลบ...');
       try { await api('deleteEmployee', { token: state.adminToken, id: emp.id }); toast('ลบเรียบร้อย', 'ok'); await loadAdmin(); }
       catch (e) { hideLoading(); if (!handleAuthError(e)) toast(e.message, 'err'); }
