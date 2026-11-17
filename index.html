@@ -166,11 +166,11 @@
   #view-home .loc-title{font-size:max(14px,calc(var(--u)*1.9));line-height:1.3}
   #view-home .loc-detail{font-size:max(12px,calc(var(--u)*1.45));line-height:1.4}
   #view-home .section-title{flex-shrink:0;margin:calc(var(--u)*2.2) calc(var(--u)*.5) calc(var(--u)*1.2);font-size:max(13px,calc(var(--u)*1.7))}
-  #view-home .action-grid{flex:1;min-height:0;grid-template-rows:1fr 1fr;gap:calc(var(--u)*1.6)}
+  #view-home .action-grid{flex:1;min-height:0;grid-template-columns:1fr;grid-template-rows:1fr 1fr;gap:calc(var(--u)*1.8)}
   #view-home .action-btn{justify-content:center;padding:calc(var(--u)*1.2);gap:calc(var(--u)*.5);border-radius:calc(var(--u)*2.4)}
-  #view-home .action-btn .a-icon{font-size:calc(var(--u)*5)}
-  #view-home .action-btn .a-label{font-size:max(17px,calc(var(--u)*2.9))}
-  #view-home .action-btn .a-sub{font-size:max(12px,calc(var(--u)*1.5))}
+  #view-home .action-btn .a-icon{font-size:calc(var(--u)*6.5)}
+  #view-home .action-btn .a-label{font-size:max(22px,calc(var(--u)*4))}
+  #view-home .action-btn .a-sub{font-size:max(13px,calc(var(--u)*1.8))}
   #view-home .hint{flex-shrink:0;font-size:max(11px,calc(var(--u)*1.35));margin:calc(var(--u)*1.6) 0 0}
 
   /* ---- หน้าสแกนใบหน้า ---- */
@@ -227,10 +227,8 @@
     <div class="action-grid">
       <button class="action-btn t-CLOCK_IN" data-type="CLOCK_IN"><span class="a-icon">🏢</span><span class="a-label">เข้างาน</span><span class="a-sub">Clock-in</span></button>
       <button class="action-btn t-CLOCK_OUT" data-type="CLOCK_OUT"><span class="a-icon">🏠</span><span class="a-label">เลิกงาน</span><span class="a-sub">Clock-out</span></button>
-      <button class="action-btn t-OT_IN" data-type="OT_IN"><span class="a-icon">🌙</span><span class="a-label">เริ่ม OT</span><span class="a-sub">OT-in</span></button>
-      <button class="action-btn t-OT_OUT" data-type="OT_OUT"><span class="a-icon">✅</span><span class="a-label">เลิก OT</span><span class="a-sub">OT-out</span></button>
     </div>
-    <p class="hint">ระบบจะตรวจตำแหน่ง GPS ➜ สแกนใบหน้า ➜ ตรวจคนจริง ➜ บันทึกเวลาอัตโนมัติ</p>
+    <p class="hint">ระบบจะตรวจตำแหน่ง GPS ➜ สแกนใบหน้า ➜ ตรวจคนจริง ➜ บันทึกเวลาอัตโนมัติ<br>เข้า-ออกได้หลายรอบ • ทำงานเกิน 8 ชม./วัน (หักพัก) ระบบคิด OT ให้อัตโนมัติ</p>
   </main>
 </section>
 
@@ -352,10 +350,15 @@ const CONFIG = {
   GPS_MAX_AGE_MS: 30000,      // ตำแหน่งต้องไม่เก่ากว่า 30 วินาที
   SAME_FACE_MAX_DIST: 0.55,   // ใบหน้าตอนเริ่ม-ตอนจบสแกนต้องเป็นคนเดียวกัน
   REGISTER_SAMPLES: 3,        // จำนวนตัวอย่างใบหน้าตอนลงทะเบียน
-  // ภารกิจตรวจคนจริง (ระบบจะสุ่มลำดับทุกครั้ง)
-  //   'MOUTH' = อ้าปาก แล้วหุบ   'TURN' = หันหน้าซ้ายหรือขวา แล้วกลับมาตรง
-  //   'BLINK' = หลับตาช้าๆ แล้วลืมตา (ตรวจยากบนมือถือบางรุ่น จึงปิดไว้เป็นค่าเริ่มต้น)
-  LIVENESS_CHALLENGES: ['MOUTH', 'TURN'],
+  // ภารกิจตรวจคนจริง (ระบบจะสุ่มลำดับทุกครั้ง) เลือกใส่ได้ตามต้องการ:
+  //   'TURN_LEFT'  = หันหน้าไปทางซ้าย แล้วกลับมาตรง
+  //   'TURN_RIGHT' = หันหน้าไปทางขวา แล้วกลับมาตรง
+  //   'NOD'        = เงยหน้าหรือก้มหน้าเล็กน้อย แล้วกลับมาตรง
+  //   'TURN'       = หันซ้ายหรือขวาก็ได้        'MOUTH' = อ้าปาก แล้วหุบ
+  //   'BLINK'      = หลับตาช้าๆ แล้วลืมตา (ตรวจยากบนมือถือบางรุ่น)
+  // ค่าเริ่มต้น: กะพริบตา + หันหน้า (ถ้าที่ทำงานฝุ่นเยอะ แนะนำ ['TURN_LEFT', 'TURN_RIGHT'])
+  LIVENESS_CHALLENGES: ['BLINK', 'TURN'],
+  BLINK_FALLBACK_MS: 12000,   // ถ้าตรวจกะพริบตาไม่ได้ภายในเวลานี้ จะเปลี่ยนขั้นนั้นเป็นการหันหน้าแทนอัตโนมัติ
   TZ: 'Asia/Bangkok'
 };
 
@@ -718,7 +721,8 @@ function renderSteps() {
       steps.push({ label: 'ตัวอย่าง ' + (i + 1), st: i < s.samples.length ? 'done' : (i === s.samples.length ? 'current' : '') });
     }
   } else {
-    const names = { BLINK: '👁️ หลับตา', TURN: '↔️ หันหน้า', MOUTH: '👄 อ้าปาก' };
+    const names = { BLINK: '👁️ หลับตา', TURN: '↔️ หันหน้า', MOUTH: '👄 อ้าปาก',
+      TURN_LEFT: '⬅️ หันซ้าย', TURN_RIGHT: '➡️ หันขวา', NOD: '↕️ เงย/ก้มหน้า' };
     steps = [{ label: 'ตรวจจับใบหน้า', st: s.phase === 'face' || s.phase === 'loading' ? 'current' : 'done' }];
     s.challenges.forEach((c, i) => {
       let st = '';
@@ -746,9 +750,11 @@ async function scanLoop() {
   }
   const video = $('#video');
   let dets = [];
+  // ช่วงตรวจกะพริบตา ใช้ภาพเล็กลงเพื่อให้วิเคราะห์ได้หลายเฟรมต่อวินาที จับจังหวะตาปิดได้ทัน
+  const blinking = s.phase === 'challenge' && s.challenges[s.idx] === 'BLINK';
   try {
     dets = await faceapi
-      .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: CONFIG.DETECT_INPUT, scoreThreshold: 0.5 }))
+      .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: blinking ? 224 : CONFIG.DETECT_INPUT, scoreThreshold: 0.45 }))
       .withFaceLandmarks();
   } catch (e) { console.warn('detect error', e); }
   if (state.scan !== s || !s.running) return;
@@ -758,7 +764,7 @@ async function scanLoop() {
     closeScanner();
     return showResult(false, 'เกิดข้อผิดพลาด', e.message);
   }
-  if (state.scan === s && s.running) s.timer = setTimeout(scanLoop, 50);
+  if (state.scan === s && s.running) s.timer = setTimeout(scanLoop, blinking ? 0 : 50);
 }
 
 /** วิเคราะห์ใบหน้า 1 เฟรม: ค่าการเปิดตา (EAR), องศาการหันหน้า (yaw), ขนาด, ตำแหน่ง */
@@ -768,10 +774,13 @@ function analyzeFace(det, video) {
   const vw = video.videoWidth, vh = video.videoHeight;
   const ear = (eyeAspectRatio(p.slice(36, 42)) + eyeAspectRatio(p.slice(42, 48))) / 2;
   const l = p[36], r = p[45], nose = p[30];
-  const yaw = (nose.x - l.x) / ((r.x - l.x) || 1); // ~0.5 = หน้าตรง
+  const yaw = (nose.x - l.x) / ((r.x - l.x) || 1); // ~0.5 = หน้าตรง, มากขึ้น = หันไปทางซ้ายของผู้ใช้
+  // องศาเงย/ก้ม: ตำแหน่งปลายจมูกเทียบระหว่างแนวตากับคาง (เงย = ค่าลดลง, ก้ม = ค่าเพิ่มขึ้น)
+  const eyeY = (p[36].y + p[45].y) / 2;
+  const pitch = (nose.y - eyeY) / ((p[8].y - eyeY) || 1);
   const size = box.width / Math.min(vw, vh);
   const cx = (box.x + box.width / 2) / vw, cy = (box.y + box.height / 2) / vh;
-  return { ear, yaw, size, mar: mouthAspectRatio(p), centered: Math.abs(cx - 0.5) < 0.16 && Math.abs(cy - 0.5) < 0.22 };
+  return { ear, yaw, pitch, size, mar: mouthAspectRatio(p), centered: Math.abs(cx - 0.5) < 0.16 && Math.abs(cy - 0.5) < 0.22 };
 }
 
 /** ค่าการอ้าปาก (Mouth Aspect Ratio) จากจุดริมฝีปากด้านใน 60-67: หุบปาก ≈ 0-0.1, อ้าปาก ≈ 0.4 ขึ้นไป */
@@ -837,13 +846,17 @@ async function handleFrame(s, dets) {
     s.stable++;
     setRing('ok');
     setInstruction('พบใบหน้าแล้ว ค้างไว้สักครู่...');
+    s.earSamples.push(a.ear);   // เก็บค่าการเปิดตาตอนลืมตาปกติ ไว้เป็นฐานของการกะพริบตา
     if (s.stable < 3) return;
     s.busy = true;
+    s.yawBase = a.yaw;      // ท่าหน้าตรงของคนนี้ ใช้เป็นจุดอ้างอิงตอนหันหน้า
+    s.pitchBase = a.pitch;
     s.refDescriptor = await computeDescriptor(snapshot(video));  // เก็บใบหน้าตั้งต้นไว้เทียบตอนจบ
     s.busy = false;
     s.stable = 0;
     if (!s.refDescriptor) return;
     s.phase = s.challenges.length ? 'challenge' : 'capture';
+    s.challengeStartAt = Date.now();
     renderSteps();
     return;
   }
@@ -852,7 +865,29 @@ async function handleFrame(s, dets) {
     const c = s.challenges[s.idx];
     let done = false;
     setRing('ok');
-    if (c === 'MOUTH') {
+    if (c === 'TURN_LEFT' || c === 'TURN_RIGHT') {
+      // ภาพในจอกลับด้านเหมือนกระจก: ผู้ใช้หันไปทางซ้ายของตัวเอง = ค่า yaw เพิ่มขึ้น
+      const dir = c === 'TURN_LEFT' ? 1 : -1;
+      const delta = (a.yaw - s.yawBase) * dir;
+      const word = c === 'TURN_LEFT' ? '⬅️ หันหน้าไปทาง <b>ซ้าย</b> ช้าๆ' : 'หันหน้าไปทาง <b>ขวา</b> ช้าๆ ➡️';
+      if (!s.turned) {
+        if (delta > 0.13) s.turned = true;
+        else if (delta < -0.13) { setRing('warn'); setInstruction(word + '<br><span class="small">(หันผิดทาง)</span>', true); return; }
+        setInstruction(word, true);
+      } else {
+        setInstruction('ดีมาก! หันกลับมามองตรงกล้อง');
+        if (Math.abs(a.yaw - s.yawBase) < 0.07) done = true;
+      }
+    } else if (c === 'NOD') {
+      const dp = a.pitch - s.pitchBase;
+      if (!s.turned) {
+        setInstruction('↕️ เงยหน้าขึ้น หรือก้มหน้าลงเล็กน้อย');
+        if (Math.abs(dp) > 0.07) s.turned = true;
+      } else {
+        setInstruction('ดีมาก! กลับมามองตรงกล้อง');
+        if (Math.abs(dp) < 0.035) done = true;
+      }
+    } else if (c === 'MOUTH') {
       // อ้าปากค้าง 2 เฟรมติดกัน ➜ หุบปาก (รูปถ่ายนิ่งทำไม่ได้)
       if (!s.mouthOpened) {
         setInstruction('👄 อ้าปากกว้างๆ ค้างไว้ 1 วินาที');
@@ -863,20 +898,35 @@ async function handleFrame(s, dets) {
         if (a.mar < 0.2) done = true;
       }
     } else if (c === 'BLINK') {
-      // เก็บค่า EAR ตอนลืมตาเป็นฐาน แล้วจับจังหวะ ตาปิด (ค้าง) ➜ ตาเปิด
-      if (s.earBase === null) {
-        if (isFrontal(a)) s.earSamples.push(a.ear);
-        setInstruction('👁️ ลืมตามองกล้องตามปกติ...');
-        if (s.earSamples.length >= 6) s.earBase = median(s.earSamples);
+      // ถ้าผ่านไปนานแล้วยังจับการกะพริบตาไม่ได้ (เช่น แสงน้อย ใส่แว่น) เปลี่ยนขั้นนี้เป็นการหันหน้าแทน
+      if (Date.now() - s.challengeStartAt > CONFIG.BLINK_FALLBACK_MS) {
+        const alt = s.challenges.indexOf('TURN_LEFT') < 0 ? 'TURN_LEFT' : 'TURN_RIGHT';
+        s.challenges[s.idx] = alt;
+        s.eyeClosed = false; s.closedFrames = 0; s.turned = false;
+        s.challengeStartAt = Date.now();
+        s.startTime += CONFIG.BLINK_FALLBACK_MS;   // ต่อเวลาให้ทำขั้นใหม่
+        renderSteps();
+        setRing('warn');
+        setInstruction('ตรวจการกะพริบตาไม่สำเร็จ<br><span class="small">เปลี่ยนเป็นการหันหน้าแทน</span>', true);
         return;
       }
-      setInstruction(s.eyeClosed ? 'ลืมตาได้เลย' : '👁️ หลับตาช้าๆ ค้างไว้ 1 วินาที แล้วลืมตา');
-      const closed = a.ear < s.earBase * 0.82 || a.ear < s.earBase - 0.05;
+      // ฐาน = ค่าการเปิดตาตอนลืมตาปกติ (เก็บตั้งแต่ขั้นตรวจจับใบหน้า)
+      if (s.earBase === null) {
+        if (isFrontal(a)) s.earSamples.push(a.ear);
+        if (s.earSamples.length < 3) { setInstruction('👁️ ลืมตามองกล้องตามปกติ...'); return; }
+        s.earBase = median(s.earSamples);
+      }
+      const left = Math.ceil((CONFIG.BLINK_FALLBACK_MS - (Date.now() - s.challengeStartAt)) / 1000);
       if (!s.eyeClosed) {
+        setInstruction('👁️ <b>หลับตา</b> ค้างไว้ครู่หนึ่ง แล้วลืมตา<br><span class="small">(' + left + ' วินาที)</span>', true);
+        // ปรับฐานตามค่าตาเปิดสูงสุดล่าสุด เพื่อรองรับแสง/มุมที่เปลี่ยนไป
+        s.earBase = Math.max(s.earBase * 0.97, a.ear);
+        const closed = a.ear < s.earBase * 0.8;
         s.closedFrames = closed ? s.closedFrames + 1 : 0;
         if (s.closedFrames >= 1) s.eyeClosed = true;
-      } else if (a.ear > s.earBase * 0.9) {
-        done = true;
+      } else {
+        setInstruction('ดีมาก! <b>ลืมตา</b>ได้เลย', true);
+        if (a.ear > s.earBase * 0.88) done = true;
       }
     } else if (c === 'TURN') {
       if (!s.turned) {
@@ -889,6 +939,7 @@ async function handleFrame(s, dets) {
     }
     if (done) {
       s.idx++;
+      s.challengeStartAt = Date.now();
       s.eyeClosed = false; s.closedFrames = 0; s.turned = false;
       s.mouthOpenFrames = 0; s.mouthOpened = false;
       if (s.idx >= s.challenges.length) s.phase = 'capture';
@@ -898,9 +949,10 @@ async function handleFrame(s, dets) {
   }
 
   if (s.phase === 'capture') {
-    const eyesOpen = s.earBase === null || a.ear > s.earBase * 0.85;
-    const mouthClosed = a.mar < 0.25;
-    if (!isFrontal(a) || !eyesOpen || !mouthClosed) { s.stable = 0; setRing('warn'); setInstruction('มองตรงเข้ากล้อง หุบปาก ลืมตาตามปกติ'); return; }
+    const eyesOpen = s.earBase === null || a.ear > s.earBase * 0.75;
+    // ตรวจว่าหุบปากเฉพาะเมื่อมีภารกิจอ้าปาก (กันค้างกรณีใส่หน้ากาก/ผ้าปิดปาก)
+    const mouthClosed = s.challenges.indexOf('MOUTH') < 0 || a.mar < 0.25;
+    if (!isFrontal(a) || !eyesOpen || !mouthClosed) { s.stable = 0; setRing('warn'); setInstruction('มองตรงเข้ากล้องตามปกติ'); return; }
     s.stable++;
     setRing('ok');
     setInstruction('ค้างไว้... กำลังยืนยันตัวตน');
@@ -984,12 +1036,17 @@ async function submitCheckIn(s, descriptor, canvas) {
     closeScanner();
     const late = res.lateMinutes > 0;
     showResult(true, 'บันทึก' + TYPES[res.type].label + 'สำเร็จ', 'คุณ' + res.employeeName, [
+      // เลิกงาน: แสดงยอดรวมของวันทำงาน (ทุกรอบรวมกัน หักพักแล้ว)
+      ...(res.type === 'CLOCK_OUT' && res.dayWorkMinutes != null ? [
+        ['⏱️ เวลาปกติวันนี้', fmtMinutes(res.dayWorkMinutes) + (res.dayBreakMinutes ? ' (หักพัก ' + fmtMinutes(res.dayBreakMinutes) + ')' : '')],
+        ['🌙 OT วันนี้', res.dayOtMinutes > 0 ? fmtMinutes(res.dayOtMinutes) : '-']
+      ] : []),
       ['ประเภท', res.typeLabel],
       ['วันที่', formatThaiDate(res.date)],
       ['เวลา', res.time + ' น.'],
       ['สถานที่', res.locationName],
       ['ระยะห่าง', fmtDist(res.distance) + ' (รัศมี ' + res.radius + ' ม.)'],
-      ['สถานะ', '<span class="chip ' + (late || /ก่อนเวลา|ไม่พบ/.test(res.status) ? 'red' : 'green') + '">' + esc(res.status) + '</span>', true],
+      ['สถานะ', '<span class="chip ' + (late || /ก่อนเวลา|ไม่พบ|ตรวจสอบ/.test(res.status) ? 'red' : (res.otMinutes > 0 ? 'violet' : 'green')) + '">' + esc(res.status) + '</span>', true],
       ['รูปถ่ายหลักฐาน', res.photoSaved ? 'บันทึกแล้ว' : '-']
     ], late ? '⏰' : '✅');
   } catch (e) {
@@ -1233,7 +1290,7 @@ function openLocationForm(loc) {
 /* ---------- ตั้งค่าเวลางาน ---------- */
 const SETTING_LABELS = {
   COMPANY_NAME: 'ชื่อบริษัท', WORK_START: 'เวลาเข้างานมาตรฐาน', WORK_END: 'เวลาเลิกงานมาตรฐาน',
-  LATE_GRACE_MIN: 'ผ่อนผันมาสาย (นาที)', OT_MIN_MINUTES: 'OT ขั้นต่ำ (นาที)', OT_ROUND_MIN: 'ปัดเศษ OT (นาที)',
+  LATE_GRACE_MIN: 'ผ่อนผันมาสาย (นาที)', OT_MIN_MINUTES: 'OT ขั้นต่ำ (นาที)', OT_ROUND_MIN: 'ปัดเศษ OT (นาที)', OT_MAX_MINUTES: 'เพดาน OT ต่อวัน (นาที)', REGULAR_WORK_MIN: 'เวลาทำงานปกติต่อวัน (นาที)', DAY_CUTOFF: 'เวลาตัดรอบวันทำงาน',
   FACE_MATCH_THRESHOLD: 'เกณฑ์ความเหมือนใบหน้า', MAX_GPS_ACCURACY_M: 'ความคลาดเคลื่อน GPS สูงสุด (ม.)',
   DEFAULT_RADIUS_M: 'รัศมีเริ่มต้น (ม.)', DUPLICATE_BLOCK_MIN: 'กันบันทึกซ้ำภายใน (นาที)',
   LIVENESS_ENABLED: 'ตรวจคนจริง (กะพริบตา/หันหน้า)', SAVE_PHOTO: 'บันทึกรูปถ่ายหลักฐาน', TIMEZONE: 'เขตเวลา'
@@ -1379,11 +1436,11 @@ function renderLogs(logs, date) {
   $('#log-stats').innerHTML = `
     <div class="stat"><b>${count('CLOCK_IN')}</b><span>เข้างาน</span></div>
     <div class="stat"><b style="color:var(--red)">${late}</b><span>มาสาย</span></div>
-    <div class="stat"><b>${count('CLOCK_OUT')}</b><span>เลิกงาน</span></div>
-    <div class="stat"><b>${count('OT_OUT')}</b><span>ปิด OT</span></div>`;
+    <div class="stat"><b>${fmtHours(logs.reduce((t, l) => t + (l.workMinutes || 0), 0))}</b><span>ชม.ปกติรวม</span></div>
+    <div class="stat"><b style="color:var(--violet)">${fmtHours(logs.reduce((t, l) => t + (l.otMinutes || 0), 0))}</b><span>OT รวม (ชม.)</span></div>`;
   $('#log-list').innerHTML = logs.length ? logs.map(l => {
     const t = TYPES[l.type] || { label: l.type, chip: 'gray', icon: '•' };
-    const bad = l.lateMinutes > 0 || l.earlyMinutes > 0 || /ไม่พบ|ไม่ถึง/.test(l.status);
+    const bad = l.lateMinutes > 0 || l.earlyMinutes > 0 || /ไม่พบ|ไม่ถึง|ตรวจสอบ/.test(l.status);
     return `
     <div class="item">
       <div class="item-top">
@@ -1394,7 +1451,7 @@ function renderLogs(logs, date) {
         <span class="chip ${t.chip}">${t.icon} ${esc(t.label)}</span>
       </div>
       <div class="item-actions" style="align-items:center">
-        <span class="chip ${bad ? 'red' : 'green'}">${esc(l.status)}</span>
+        <span class="chip ${bad ? 'red' : (l.otMinutes > 0 ? 'violet' : 'green')}">${esc(l.status)}</span>
         ${l.photoUrl ? `<a class="small" href="${esc(l.photoUrl)}" target="_blank" rel="noopener">🖼️ รูปหลักฐาน</a>` : ''}
         <a class="small" href="https://www.google.com/maps?q=${l.lat},${l.lng}" target="_blank" rel="noopener">🗺️ พิกัด</a>
       </div>
@@ -1423,6 +1480,8 @@ function toast(msg, type, ms) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), ms || 3500);
 }
+function fmtMinutes(min) { min = Math.round(min); const h = Math.floor(min / 60), m = min % 60; return ((h ? h + ' ชม. ' : '') + (m ? m + ' นาที' : (h ? '' : '0 นาที'))).trim(); }
+function fmtHours(min) { return (Math.round(min / 6) / 10).toString(); }
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function median(a) { const s = a.slice().sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; }
 function euclid(a, b) { let s = 0; for (let i = 0; i < a.length; i++) { const d = a[i] - b[i]; s += d * d; } return Math.sqrt(s); }
