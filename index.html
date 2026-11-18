@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#1f3864">
 <title>ระบบลงเวลาทำงาน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
 <style>
   :root{
     --bg:#f2f4fa; --card:#fff; --text:#1c2333; --muted:#6b7385; --border:#e5e8f1;
-    --primary:#4f46e5; --primary-2:#7c3aed; --green:#16a34a; --red:#dc2626; --amber:#d97706; --violet:#7c3aed; --blue:#2563eb;
+    --primary:#1f3864; --primary-2:#2f5597; --green:#16a34a; --red:#dc2626; --amber:#d97706; --violet:#7c3aed; --blue:#2563eb;
     --radius:18px; --shadow:0 6px 24px rgba(30,41,80,.08);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -37,7 +37,7 @@
   .icon-btn.dark{background:#eef0f7;color:var(--text)}
   .home-main{margin-top:-48px}
   .loc-card{display:flex;gap:12px;align-items:center}
-  .loc-icon{width:46px;height:46px;border-radius:14px;background:#eef0ff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .loc-icon{width:46px;height:46px;border-radius:14px;background:#d9e1f2;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
   .loc-card.ok .loc-icon{background:#dcfce7} .loc-card.bad .loc-icon{background:#fee2e2}
   .loc-body{flex:1;min-width:0}
   .loc-title{font-weight:600}
@@ -72,7 +72,7 @@
   .scan-instruction{text-align:center;font-size:20px;font-weight:600;padding:8px 20px;min-height:66px}
   .scan-steps{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:0 16px}
   .step{font-size:12px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.75)}
-  .step.current{background:#4f46e5;color:#fff}
+  .step.current{background:#1f3864;color:#fff}
   .step.done{background:#16a34a;color:#fff}
   .scan-meta{text-align:center;font-size:13px;opacity:.7;padding:12px 16px calc(20px + env(safe-area-inset-bottom))}
 
@@ -97,7 +97,7 @@
   .field{margin-bottom:12px}
   .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px;font-weight:500}
   .field input,.field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;color:var(--text)}
-  .field input:focus,.field select:focus{outline:2px solid #c7d2fe;border-color:var(--primary)}
+  .field input:focus,.field select:focus{outline:2px solid #b4c6e7;border-color:var(--primary)}
   .field .desc{font-size:12px;color:var(--muted);margin-top:3px}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
@@ -197,6 +197,70 @@
   #view-result .chip{font-size:max(12px,calc(var(--u)*1.5));padding:calc(var(--u)*.3) calc(var(--u)*1.1);white-space:normal}
   #view-result .btn{font-size:max(15px,calc(var(--u)*2));padding:calc(var(--u)*1.6);border-radius:calc(var(--u)*1.5)}
   #view-result #result-countdown{font-size:max(12px,calc(var(--u)*1.45))!important}
+
+  /* =================================================================
+   * ธีม 4 "กรมท่าเรขาคณิต" + ไอคอนเวกเตอร์ (SVG แบบเส้น)
+   * ===============================================================*/
+
+.svg-ic{display:inline-flex;align-items:center;justify-content:center}
+.svg-ic svg{width:1em;height:1em;display:block}
+#view-home .icon-btn.svg-ic svg,#view-scan .icon-btn.svg-ic svg{width:.95em;height:.95em}
+#view-home .action-btn .a-icon.svg-ic{width:calc(var(--u)*11);height:calc(var(--u)*11);border-radius:50%;font-size:calc(var(--u)*5.2)}
+#view-result .result-icon.svg-ic{width:calc(var(--u)*12);height:calc(var(--u)*12);margin:0 auto;border-radius:50%;font-size:calc(var(--u)*7)}
+html body #view-home .action-btn{flex-direction:row;justify-content:flex-start;gap:calc(var(--u)*2.4);padding:0 calc(var(--u)*3.5);text-align:left}
+html body #view-home .action-btn .a-label{display:block}
+#view-home .action-btn .a-text{display:flex;flex-direction:column;align-items:flex-start}
+html body #view-scan .scan-instruction{display:block;text-align:center}
+html body #view-scan .scan-instruction .small{display:block;font-weight:400;opacity:.75}
+
+html body{background:#f3f5fa}
+html body #view-home .hero{background:#1f3864 url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20400%20300%22%3E%3Cpath%20fill%3D%22%2324427a%22%20d%3D%22M0%20300L180%200h90L90%20300z%22/%3E%3Cpath%20fill%3D%22%232a4b88%22%20d%3D%22M220%20300L400%2040v120L320%20300z%22/%3E%3Cpath%20fill%3D%22%231b315c%22%20d%3D%22M300%200h100v60z%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2240%22%20fill%3D%22none%22%20stroke%3D%22%232f5597%22%20stroke-width%3D%2210%22/%3E%3C/svg%3E") center/cover no-repeat;color:#fff}
+html body #view-home .clock{font-weight:700}
+html body #view-home .icon-btn{background:rgba(255,255,255,.14);color:#fff}
+html body .card{border:1px solid #e2e7f1;box-shadow:0 6px 20px rgba(31,56,100,.08)}
+html body #view-home .loc-icon{background:#d9e1f2;color:#1f3864}
+html body #view-home .loc-card.ok .loc-icon{background:#dcfce7;color:#15803d}
+html body #view-home .loc-card.ok .loc-title{color:#15803d}
+html body #view-home .action-btn{box-shadow:none;border-radius:20px}
+html body #view-home .t-CLOCK_IN{background:#1f3864;color:#fff}
+html body #view-home .t-CLOCK_OUT{background:#fff;color:#1f3864;border:2px solid #1f3864}
+html body #view-home .t-CLOCK_IN .a-icon{background:#f59e0b;color:#1f3864}
+html body #view-home .t-CLOCK_OUT .a-icon{background:#d9e1f2;color:#1f3864}
+html body .scan-view{background:#1f3864 url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20400%20300%22%3E%3Cpath%20fill%3D%22%2324427a%22%20d%3D%22M0%20300L180%200h90L90%20300z%22/%3E%3Cpath%20fill%3D%22%232a4b88%22%20d%3D%22M220%20300L400%2040v120L320%20300z%22/%3E%3Cpath%20fill%3D%22%231b315c%22%20d%3D%22M300%200h100v60z%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2240%22%20fill%3D%22none%22%20stroke%3D%22%232f5597%22%20stroke-width%3D%2210%22/%3E%3C/svg%3E") center/cover no-repeat}
+html body .cam-frame{background:#2a4b88}
+html body .cam-ring.ok{border-color:#f59e0b;box-shadow:0 0 0 6px rgba(245,158,11,.25)}
+html body .step{background:rgba(255,255,255,.14);color:#d9e1f2}
+html body .step.current{background:#f59e0b;color:#1f3864}
+html body .step.done{background:#d9e1f2;color:#1f3864}
+html body #view-result{background:#f3f5fa}
+html body #view-result .result-icon{background:#d9e1f2;color:#1f3864}
+html body #view-result .btn.primary{background:#1f3864}
+
+  /* ---- ปุ่มเข้างาน/เลิกงาน แบบไทล์คู่ ยืดเต็มช่อง (ปรับตามสัดส่วนจอเอง) ---- */
+  #view-home{--in:#1f3864;--inFg:#ffffff;--out:#ffffff;--outFg:#1f3864;--outBd:#1f3864;--acc:#f59e0b;--soft:#d9e1f2;--ink:#1f3864;--muted:#5b6b8c;--card:#ffffff;--outPill:#d9e1f2;--outPillFg:#1f3864}
+  #view-home .action-btn .a-time{display:none}
+html body #view-home .action-btn{box-shadow:none}
+html body #view-home .action-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;align-content:center;gap:calc(var(--u)*2)}
+html body #view-home .action-btn{flex-direction:column;justify-content:center;align-items:center;text-align:center;aspect-ratio:4/5;padding:calc(var(--u)*2);border-radius:calc(var(--u)*3.2);gap:calc(var(--u)*1.6)}
+html body #view-home .action-btn .a-text{align-items:center}
+html body #view-home .action-btn .a-icon.svg-ic{width:calc(var(--u)*13);height:calc(var(--u)*13);font-size:calc(var(--u)*6)}
+html body #view-home .action-btn .a-label{font-size:calc(var(--u)*3.4)}
+html body #view-home .action-btn .a-time{display:block;margin-top:calc(var(--u)*.6);font-size:calc(var(--u)*1.5);padding:calc(var(--u)*.4) calc(var(--u)*1.4);border-radius:999px;background:rgba(255,255,255,.18)}
+html body #view-home .action-btn.t-CLOCK_OUT .a-time{background:var(--soft);color:var(--ink)}
+html body #view-home .action-grid{grid-template-rows:1fr;align-content:stretch}
+html body #view-home .action-btn{aspect-ratio:auto;height:auto;gap:calc(var(--u)*2.2)}
+html body #view-home .action-btn .a-icon.svg-ic{width:calc(var(--u)*16);height:calc(var(--u)*16);font-size:calc(var(--u)*7.5)}
+html body #view-home .action-btn .a-label{font-size:calc(var(--u)*4)}
+html body #view-home .action-btn .a-sub{font-size:calc(var(--u)*2)}
+html body #view-home .action-btn .a-time{font-size:calc(var(--u)*1.7);padding:calc(var(--u)*.6) calc(var(--u)*1.8)}
+
+  /* ข้อความ GPS ไม่ให้หน่วยหล่นบรรทัด */
+  #view-home .loc-detail .nw{white-space:nowrap}
+  /* หน้าผลลัพธ์: ไอคอนตามผล */
+  html body #view-result .result-icon.ok{background:#dcfce7;color:#15803d}
+  html body #view-result .result-icon.fail{background:#fee2e2;color:#b91c1c}
+  /* แถบหัวหน้า Admin ใช้โทนเดียวกัน */
+  html body .tab{border-radius:12px}
 </style>
 </head>
 <body>
@@ -209,34 +273,34 @@
         <div class="company" id="company-name">กำลังโหลด...</div>
         <div class="hero-sub">ระบบลงเวลาทำงานด้วยใบหน้า</div>
       </div>
-      <button class="icon-btn" id="btn-admin" aria-label="ผู้ดูแลระบบ">⚙️</button>
+      <button class="icon-btn svg-ic" id="btn-admin" aria-label="ผู้ดูแลระบบ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/><circle cx="12" cy="12" r="6.5"/></svg></button>
     </div>
     <div class="clock" id="clock-time">--:--:--</div>
     <div class="date" id="clock-date">&nbsp;</div>
   </header>
   <main class="container fit-inner home-main">
     <div class="card loc-card" id="loc-card">
-      <div class="loc-icon" id="loc-icon">📡</div>
+      <div class="loc-icon svg-ic" id="loc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
       <div class="loc-body">
         <div class="loc-title" id="loc-title">กำลังค้นหาตำแหน่ง GPS...</div>
         <div class="loc-detail" id="loc-detail">กรุณาอนุญาตการเข้าถึงตำแหน่งเมื่อเบราว์เซอร์ถาม</div>
       </div>
-      <button class="icon-btn dark" id="btn-refresh-gps" aria-label="รีเฟรชตำแหน่ง">🔄</button>
+      <button class="icon-btn dark svg-ic" id="btn-refresh-gps" aria-label="รีเฟรชตำแหน่ง"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.5L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.6 4.5L20 16"/><path d="M20 20v-4h-4"/></svg></button>
     </div>
 
     <h3 class="section-title">เลือกประเภทการลงเวลา</h3>
     <div class="action-grid">
-      <button class="action-btn t-CLOCK_IN" data-type="CLOCK_IN"><span class="a-icon">🏢</span><span class="a-label">เข้างาน</span><span class="a-sub">Clock-in</span></button>
-      <button class="action-btn t-CLOCK_OUT" data-type="CLOCK_OUT"><span class="a-icon">🏠</span><span class="a-label">เลิกงาน</span><span class="a-sub">Clock-out</span></button>
+      <button class="action-btn t-CLOCK_IN" data-type="CLOCK_IN"><span class="a-icon svg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l4-4-4-4"/><path d="M14 12H4"/></svg></span><span class="a-text"><span class="a-label">เข้างาน</span><span class="a-sub">Clock-in</span><span class="a-time" id="time-in"></span></span></button>
+      <button class="action-btn t-CLOCK_OUT" data-type="CLOCK_OUT"><span class="a-icon svg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4"/><path d="M16 16l4-4-4-4"/><path d="M20 12H10"/></svg></span><span class="a-text"><span class="a-label">เลิกงาน</span><span class="a-sub">Clock-out</span><span class="a-time" id="time-out"></span></span></button>
     </div>
-    <p class="hint">ระบบจะตรวจตำแหน่ง GPS ➜ สแกนใบหน้า ➜ ตรวจคนจริง ➜ บันทึกเวลาอัตโนมัติ<br>เข้า-ออกได้หลายรอบ • ทำงานเกิน 8 ชม./วัน (หักพัก) ระบบคิด OT ให้อัตโนมัติ</p>
+    <p class="hint">ตรวจ GPS ➜ สแกนใบหน้า ➜ ตรวจคนจริง ➜ บันทึกเวลา<br>เข้า-ออกได้หลายรอบ • เกิน 8 ชม./วัน (หักพัก) คิด OT อัตโนมัติ</p>
   </main>
 </section>
 
 <!-- ======================= หน้าสแกนใบหน้า ======================= -->
 <section id="view-scan" class="view fit-view scan-view">
   <div class="scan-header">
-    <button class="icon-btn" id="btn-scan-cancel" aria-label="ยกเลิก">✕</button>
+    <button class="icon-btn svg-ic" id="btn-scan-cancel" aria-label="ยกเลิก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="scan-title" id="scan-title">สแกนใบหน้า</div>
     <div style="width:40px"></div>
   </div>
@@ -255,7 +319,7 @@
 <section id="view-result" class="view fit-view">
   <main class="container fit-inner result-wrap">
     <div class="card result-card">
-      <div class="result-icon" id="result-icon">✅</div>
+      <div class="result-icon svg-ic ok" id="result-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.7 2.7L16 9.5"/></svg></div>
       <h2 id="result-title"></h2>
       <div class="muted" id="result-sub"></div>
       <div class="result-details" id="result-details"></div>
@@ -558,34 +622,63 @@ function findLocation(pos) {
   return { nearest, inside };
 }
 
-const fmtDist = m => m >= 1000 ? (m / 1000).toFixed(2) + ' กม.' : Math.round(m) + ' ม.';
+const fmtDist = m => m >= 1000 ? (m / 1000).toFixed(2) + '\u00a0กม.' : Math.round(m) + '\u00a0ม.';
+/* ไอคอนเวกเตอร์แบบเส้น (stroke=currentColor เปลี่ยนสีตามธีมได้) */
+const ICONS = {
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+  pinOk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><path d="M9.2 9.6l2 2 3.6-3.8"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.7 2.7L16 9.5"/></svg>',
+  fail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L2.8 19.5h18.4z"/><path d="M12 10v4.2"/><circle cx="12" cy="17" r=".7" fill="currentColor"/></svg>',
+  signal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 19v-2M10 19v-5M15 19v-8M20 19V8"/></svg>',
+  block: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><path d="M9.8 7.3l4.4 4.4M14.2 7.3l-4.4 4.4"/></svg>',
+  radar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/></svg>'
+};
+function setLocIcon(k) { const el = $('#loc-icon'); el.innerHTML = ICONS[k]; }
+
+/* แสดงเวลาเข้า/เลิกงานบนปุ่ม (ใช้เวลาของสถานที่ที่อยู่ ถ้าไม่ได้กำหนดใช้ค่ามาตรฐาน) */
+function renderWorkTimes(loc) {
+  if (!state.init) return;
+  const ws = (loc && loc.workStart) || state.init.workStart || '';
+  const we = (loc && loc.workEnd) || state.init.workEnd || '';
+  $('#time-in').textContent = ws ? 'เวลาเข้างาน ' + ws + ' น.' : '';
+  $('#time-out').textContent = we ? 'เวลาเลิกงาน ' + we + ' น.' : '';
+  $('#time-in').style.visibility = ws ? '' : 'hidden';
+  $('#time-out').style.visibility = we ? '' : 'hidden';
+}
+
 
 function renderLocation() {
+  renderLocation_();
+  const r = state.pos && state.init && state.init.locations.length ? findLocation(state.pos) : null;
+  renderWorkTimes(r ? (r.inside || r.nearest || {}).loc : null);
+}
+function renderLocation_() {
   const card = $('#loc-card');
   card.classList.remove('ok', 'bad');
   if (state.gpsError && !state.pos) {
     card.classList.add('bad');
-    $('#loc-icon').textContent = '⚠️';
+    setLocIcon('warn');
     $('#loc-title').textContent = 'ไม่สามารถระบุตำแหน่ง';
     $('#loc-detail').textContent = state.gpsError;
     return;
   }
   if (!state.pos) {
-    $('#loc-icon').textContent = '📡';
+    setLocIcon('radar');
     $('#loc-title').textContent = 'กำลังค้นหาตำแหน่ง GPS...';
     $('#loc-detail').textContent = 'กรุณาอนุญาตการเข้าถึงตำแหน่งเมื่อเบราว์เซอร์ถาม';
     return;
   }
-  const acc = '±' + Math.round(state.pos.acc) + ' ม.';
+  const acc = '±' + Math.round(state.pos.acc) + '\u00a0ม.';
   if (!state.init) {
-    $('#loc-icon').textContent = '📍';
+    setLocIcon('pin');
     $('#loc-title').textContent = 'ได้ตำแหน่งแล้ว';
     $('#loc-detail').textContent = 'ความแม่นยำ ' + acc;
     return;
   }
   if (!state.init.locations.length) {
     card.classList.add('bad');
-    $('#loc-icon').textContent = '⚠️';
+    setLocIcon('warn');
     $('#loc-title').textContent = 'ยังไม่ได้ตั้งค่าสถานที่ทำงาน';
     $('#loc-detail').textContent = 'กรุณาให้ผู้ดูแลเพิ่มสถานที่ในหน้า Admin';
     return;
@@ -594,17 +687,17 @@ function renderLocation() {
   const tooInaccurate = state.pos.acc > state.init.maxGpsAccuracy;
   if (r.inside && !tooInaccurate) {
     card.classList.add('ok');
-    $('#loc-icon').textContent = '✅';
+    setLocIcon('pinOk');
     $('#loc-title').textContent = 'อยู่ในพื้นที่: ' + r.inside.loc.name;
-    $('#loc-detail').textContent = 'ห่างจุดเช็กอิน ' + fmtDist(r.inside.distance) + ' (รัศมี ' + r.inside.loc.radius + ' ม.) • GPS ' + acc;
+    $('#loc-detail').textContent = 'ห่างจุดเช็กอิน ' + fmtDist(r.inside.distance) + ' (รัศมี ' + r.inside.loc.radius + '\u00a0ม.) • GPS\u00a0' + acc;
   } else if (tooInaccurate) {
     card.classList.add('bad');
-    $('#loc-icon').textContent = '📶';
+    setLocIcon('signal');
     $('#loc-title').textContent = 'สัญญาณ GPS ยังไม่แม่นยำ';
     $('#loc-detail').textContent = 'ความคลาดเคลื่อน ' + acc + ' (ต้องไม่เกิน ±' + state.init.maxGpsAccuracy + ' ม.) รอสักครู่หรือออกไปที่โล่ง';
   } else {
     card.classList.add('bad');
-    $('#loc-icon').textContent = '🚫';
+    setLocIcon('block');
     $('#loc-title').textContent = 'อยู่นอกพื้นที่ลงเวลา';
     $('#loc-detail').textContent = 'ใกล้สุด: ' + r.nearest.loc.name + ' ห่าง ' + fmtDist(r.nearest.distance) + ' (อนุญาต ' + r.nearest.loc.radius + ' ม.)';
   }
@@ -769,8 +862,8 @@ function renderSteps() {
       steps.push({ label: 'ตัวอย่าง ' + (i + 1), st: i < s.samples.length ? 'done' : (i === s.samples.length ? 'current' : '') });
     }
   } else {
-    const names = { BLINK: '👁️ กะพริบตา', TURN: '↔️ หันหน้า', MOUTH: '👄 อ้าปาก',
-      TURN_LEFT: '⬅️ หันซ้าย', TURN_RIGHT: '➡️ หันขวา', NOD: '↕️ เงย/ก้มหน้า' };
+    const names = { BLINK: 'กะพริบตา', TURN: 'หันหน้า', MOUTH: 'อ้าปาก',
+      TURN_LEFT: 'หันซ้าย', TURN_RIGHT: 'หันขวา', NOD: 'เงย/ก้มหน้า' };
     steps = [{ label: 'ตรวจจับใบหน้า', st: s.phase === 'face' || s.phase === 'loading' ? 'current' : 'done' }];
     s.challenges.forEach((c, i) => {
       let st = '';
@@ -1178,7 +1271,9 @@ async function submitRegister(s) {
  * ===================================================================*/
 function showResult(ok, title, sub, rows, icon) {
   clearResultTimer();
-  $('#result-icon').textContent = icon || (ok ? '✅' : '❌');
+  $('#result-icon').innerHTML = ok ? ICONS.check : ICONS.fail;
+  $('#result-icon').classList.toggle('ok', !!ok);
+  $('#result-icon').classList.toggle('fail', !ok);
   $('#result-title').textContent = title;
   $('#result-title').style.color = ok ? 'var(--green)' : 'var(--red)';
   $('#result-sub').textContent = sub || '';
@@ -1439,7 +1534,7 @@ function renderEmployees() {
   } else if (master) {
     const act = list.filter(e => e.inMaster && e.active);
     const done = act.filter(e => e.sampleCount > 0).length;
-    head = `<div class="item" style="background:#eef2ff;border-color:#c7d2fe">
+    head = `<div class="item" style="background:#eef2fa;border-color:#b4c6e7">
       <div class="item-title">📋 รายชื่อจากไฟล์ฐานข้อมูลพนักงาน</div>
       <div class="item-sub">ลงทะเบียนใบหน้าแล้ว <b>${done}</b> จาก ${act.length} คนที่ทำงานอยู่ • เพิ่ม/แก้ชื่อพนักงานในไฟล์ <a href="${esc(d.masterUrl)}" target="_blank" rel="noopener">ฐานข้อมูลพนักงาน</a></div>
     </div>`;
