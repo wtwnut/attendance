@@ -375,6 +375,13 @@ const CONFIG = {
   // ค่าเริ่มต้น: กะพริบตา + หันหน้า (ถ้าที่ทำงานฝุ่นเยอะ แนะนำ ['TURN_LEFT', 'TURN_RIGHT'])
   LIVENESS_CHALLENGES: ['BLINK', 'TURN'],
   BLINK_FALLBACK_MS: 12000,   // ถ้าตรวจกะพริบตาไม่ได้ภายในเวลานี้ จะเปลี่ยนขั้นนั้นเป็นการหันหน้าแทนอัตโนมัติ
+  // ตรวจกะพริบตาด้วย MediaPipe Face Landmarker (Google) ให้ค่า eyeBlink 0-1 โดยตรง แม่นกว่าการวัดจุดรอบตา
+  MP_MODULE: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs',
+  MP_WASM: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm',
+  MP_MODEL: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+  MP_WAIT_MS: 10000,          // รอโหลด MediaPipe ได้นานสุดกี่ ms ถ้าไม่ทันใช้วิธีเดิม (วัดระยะเปลือกตา) แทน
+  BLINK_CLOSED: 0.5,          // คะแนนหลับตา (เฉลี่ย 2 ข้าง) ตั้งแต่ค่านี้ = ตาปิด
+  BLINK_OPEN: 0.3,            // ต่ำกว่าค่านี้ = ตาเปิด
   TZ: 'Asia/Bangkok'
 };
 
@@ -446,6 +453,7 @@ async function boot() {
   }
   // โหลดโมเดล AI ล่วงหน้าเบื้องหลัง เพื่อให้กดสแกนได้เร็วขึ้น
   setTimeout(() => loadModels().catch(err => console.warn('preload models', err)), 800);
+  if (CONFIG.LIVENESS_CHALLENGES.indexOf('BLINK') >= 0) setTimeout(() => loadMediaPipe(), 1500);
 }
 
 function bindUI() {
@@ -623,6 +631,25 @@ function loadModels() {
   return state.modelsPromise;
 }
 
+/**
+ * โหลด MediaPipe Face Landmarker (ใช้เฉพาะขั้นตรวจกะพริบตา)
+ * ถ้าโหลดไม่ได้ (เน็ตช้า/เบราว์เซอร์ไม่รองรับ) คืนค่า null แล้วระบบใช้วิธีเดิมแทน ไม่ทำให้สแกนไม่ได้
+ */
+function loadMediaPipe() {
+  if (state.mpPromise) return state.mpPromise;
+  state.mpPromise = (async () => {
+    const mp = await import(CONFIG.MP_MODULE);
+    const files = await mp.FilesetResolver.forVisionTasks(CONFIG.MP_WASM);
+    const make = delegate => mp.FaceLandmarker.createFromOptions(files, {
+      baseOptions: { modelAssetPath: CONFIG.MP_MODEL, delegate },
+      runningMode: 'VIDEO', numFaces: 2, outputFaceBlendshapes: true
+    });
+    try { return await make('GPU'); }
+    catch (e) { console.warn('MediaPipe GPU ใช้ไม่ได้ ใช้ CPU แทน', e); return await make('CPU'); }
+  })().catch(err => { console.warn('โหลด MediaPipe ไม่สำเร็จ ใช้วิธีวัดระยะเปลือกตาแทน', err); state.mpPromise = null; return null; });
+  return state.mpPromise;
+}
+
 async function startCamera() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error('เบราว์เซอร์นี้ไม่รองรับกล้อง กรุณาเปิดด้วย Chrome หรือ Safari (ต้องเป็นลิงก์ https)');
@@ -711,6 +738,10 @@ async function openScanner(opts) {
 
   try {
     await Promise.all([loadModels(), startCamera()]);
+    if (s.challenges.indexOf('BLINK') >= 0) {
+      setInstruction('กำลังเตรียมระบบตรวจกะพริบตา...');
+      s.mp = await Promise.race([loadMediaPipe(), sleep(CONFIG.MP_WAIT_MS).then(() => null)]);
+    }
   } catch (e) {
     closeScanner();
     return showResult(false, 'เริ่มการสแกนไม่สำเร็จ', e.message);
@@ -769,6 +800,17 @@ async function scanLoop() {
   let dets = [];
   // ช่วงตรวจกะพริบตา ใช้ภาพเล็กลงเพื่อให้วิเคราะห์ได้หลายเฟรมต่อวินาที จับจังหวะตาปิดได้ทัน
   const blinking = s.phase === 'challenge' && s.challenges[s.idx] === 'BLINK';
+  if (blinking && s.mp) {
+    let res = null;
+    try {
+      s.mpTs = Math.max((s.mpTs || 0) + 1, performance.now());   // เวลาต้องเพิ่มขึ้นทุกเฟรม
+      res = s.mp.detectForVideo(video, s.mpTs);
+    } catch (e) { console.warn('MediaPipe detect error', e); }
+    if (state.scan !== s || !s.running) return;
+    handleBlinkMP(s, res);
+    if (state.scan === s && s.running) s.timer = setTimeout(scanLoop, 0);
+    return;
+  }
   try {
     dets = await faceapi
       .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: blinking ? 224 : CONFIG.DETECT_INPUT, scoreThreshold: 0.45 }))
@@ -916,17 +958,7 @@ async function handleFrame(s, dets) {
       }
     } else if (c === 'BLINK') {
       // ถ้าผ่านไปนานแล้วยังจับการกะพริบตาไม่ได้ (เช่น แสงน้อย ใส่แว่น) เปลี่ยนขั้นนี้เป็นการหันหน้าแทน
-      if (Date.now() - s.challengeStartAt > CONFIG.BLINK_FALLBACK_MS) {
-        const alt = s.challenges.indexOf('TURN_LEFT') < 0 ? 'TURN_LEFT' : 'TURN_RIGHT';
-        s.challenges[s.idx] = alt;
-        s.eyeClosed = false; s.closedFrames = 0; s.turned = false;
-        s.challengeStartAt = Date.now();
-        s.startTime += CONFIG.BLINK_FALLBACK_MS;   // ต่อเวลาให้ทำขั้นใหม่
-        renderSteps();
-        setRing('warn');
-        setInstruction('ตรวจการกะพริบตาไม่สำเร็จ<br><span class="small">เปลี่ยนเป็นการหันหน้าแทน</span>', true);
-        return;
-      }
+      if (blinkTimedOut(s)) return;
       // ฐาน = ค่าการเปิดตาตอนลืมตาปกติ (เก็บตั้งแต่ขั้นตรวจจับใบหน้า)
       if (s.earBase === null) {
         if (isFrontal(a)) s.earSamples.push(a.ear);
@@ -954,14 +986,7 @@ async function handleFrame(s, dets) {
         if (a.yaw > 0.4 && a.yaw < 0.6) done = true;
       }
     }
-    if (done) {
-      s.idx++;
-      s.challengeStartAt = Date.now();
-      s.eyeClosed = false; s.closedFrames = 0; s.turned = false;
-      s.mouthOpenFrames = 0; s.mouthOpened = false;
-      if (s.idx >= s.challenges.length) s.phase = 'capture';
-      renderSteps();
-    }
+    if (done) nextChallenge(s);
     return;
   }
 
@@ -986,6 +1011,56 @@ async function handleFrame(s, dets) {
       return showResult(false, 'ตรวจพบความผิดปกติ', 'ใบหน้าระหว่างการสแกนไม่ใช่คนเดียวกัน กรุณาสแกนใหม่');
     }
     return submitCheckIn(s, desc, canvas);
+  }
+}
+
+/** ผ่านภารกิจปัจจุบันแล้ว ไปภารกิจถัดไป (หรือขั้นยืนยันตัวตน) */
+function nextChallenge(s) {
+  s.idx++;
+  s.challengeStartAt = Date.now();
+  s.eyeClosed = false; s.closedFrames = 0; s.turned = false; s.sawOpen = false;
+  s.mouthOpenFrames = 0; s.mouthOpened = false;
+  if (s.idx >= s.challenges.length) s.phase = 'capture';
+  renderSteps();
+}
+
+/** ถ้าจับการกะพริบตาไม่ได้ภายในเวลาที่กำหนด เปลี่ยนขั้นนี้เป็นการหันหน้าแทน (คืนค่า true ถ้าเปลี่ยนแล้ว) */
+function blinkTimedOut(s) {
+  if (Date.now() - s.challengeStartAt <= CONFIG.BLINK_FALLBACK_MS) return false;
+  s.challenges[s.idx] = s.challenges.indexOf('TURN_LEFT') < 0 ? 'TURN_LEFT' : 'TURN_RIGHT';
+  s.eyeClosed = false; s.closedFrames = 0; s.turned = false; s.sawOpen = false;
+  s.challengeStartAt = Date.now();
+  s.startTime += CONFIG.BLINK_FALLBACK_MS;   // ต่อเวลาให้ทำขั้นใหม่
+  renderSteps();
+  setRing('warn');
+  setInstruction('ตรวจการกะพริบตาไม่สำเร็จ<br><span class="small">เปลี่ยนเป็นการหันหน้าแทน</span>', true);
+  return true;
+}
+
+/**
+ * ตรวจกะพริบตาด้วย MediaPipe: ค่า eyeBlinkLeft/Right (0 = ลืมตา, 1 = หลับตาสนิท)
+ * ต้องเห็น ตาเปิด ➜ ตาปิด ➜ ตาเปิด ครบรอบ จึงนับว่ากะพริบ (รูปถ่ายทำไม่ได้)
+ */
+function handleBlinkMP(s, res) {
+  if (blinkTimedOut(s)) return;
+  const faces = res && res.faceLandmarks ? res.faceLandmarks.length : 0;
+  if (!faces) { setRing(''); setInstruction('ไม่พบใบหน้า — มองกล้องและอยู่ในที่มีแสงสว่าง'); return; }
+  if (faces > 1) { setRing('warn'); setInstruction('พบมากกว่า 1 ใบหน้า กรุณาสแกนทีละคน'); return; }
+  const cats = (res.faceBlendshapes && res.faceBlendshapes[0] && res.faceBlendshapes[0].categories) || [];
+  const score = name => { const c = cats.find(x => x.categoryName === name); return c ? c.score : 0; };
+  const blink = (score('eyeBlinkLeft') + score('eyeBlinkRight')) / 2;
+  const left = Math.ceil((CONFIG.BLINK_FALLBACK_MS - (Date.now() - s.challengeStartAt)) / 1000);
+  setRing('ok');
+  if (!s.sawOpen) {
+    setInstruction('👁️ ลืมตามองกล้องตามปกติ...');
+    if (blink < CONFIG.BLINK_OPEN) s.sawOpen = true;
+    return;
+  }
+  if (!s.eyeClosed) {
+    setInstruction('👁️ <b>กะพริบตา</b> 1-2 ครั้ง<br><span class="small">(' + left + ' วินาที)</span>', true);
+    if (blink >= CONFIG.BLINK_CLOSED) s.eyeClosed = true;
+  } else if (blink < CONFIG.BLINK_OPEN) {
+    nextChallenge(s);
   }
 }
 
