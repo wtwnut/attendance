@@ -371,7 +371,7 @@ const CONFIG = {
   //   'TURN_RIGHT' = หันหน้าไปทางขวา แล้วกลับมาตรง
   //   'NOD'        = เงยหน้าหรือก้มหน้าเล็กน้อย แล้วกลับมาตรง
   //   'TURN'       = หันซ้ายหรือขวาก็ได้        'MOUTH' = อ้าปาก แล้วหุบ
-  //   'BLINK'      = หลับตาช้าๆ แล้วลืมตา (ตรวจยากบนมือถือบางรุ่น)
+  //   'BLINK'      = กะพริบตา (ตรวจด้วย MediaPipe ถ้าโหลดไม่ได้ใช้วิธีวัดระยะเปลือกตาแทน)
   // ค่าเริ่มต้น: กะพริบตา + หันหน้า (ถ้าที่ทำงานฝุ่นเยอะ แนะนำ ['TURN_LEFT', 'TURN_RIGHT'])
   LIVENESS_CHALLENGES: ['BLINK', 'TURN'],
   BLINK_FALLBACK_MS: 12000,   // ถ้าตรวจกะพริบตาไม่ได้ภายในเวลานี้ จะเปลี่ยนขั้นนั้นเป็นการหันหน้าแทนอัตโนมัติ
@@ -769,7 +769,7 @@ function renderSteps() {
       steps.push({ label: 'ตัวอย่าง ' + (i + 1), st: i < s.samples.length ? 'done' : (i === s.samples.length ? 'current' : '') });
     }
   } else {
-    const names = { BLINK: '👁️ หลับตา', TURN: '↔️ หันหน้า', MOUTH: '👄 อ้าปาก',
+    const names = { BLINK: '👁️ กะพริบตา', TURN: '↔️ หันหน้า', MOUTH: '👄 อ้าปาก',
       TURN_LEFT: '⬅️ หันซ้าย', TURN_RIGHT: '➡️ หันขวา', NOD: '↕️ เงย/ก้มหน้า' };
     steps = [{ label: 'ตรวจจับใบหน้า', st: s.phase === 'face' || s.phase === 'loading' ? 'current' : 'done' }];
     s.challenges.forEach((c, i) => {
