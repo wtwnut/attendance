@@ -123,6 +123,7 @@
   .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px;text-align:center}
   .stat b{display:block;font-size:20px}
   .stat span{font-size:11px;color:var(--muted)}
+  .pay-stats .stat b{font-size:15px;word-break:break-all}
   .empty{text-align:center;color:var(--muted);padding:24px 8px}
   a{color:var(--primary)}
 
@@ -289,6 +290,7 @@
         <button class="tab" data-tab="settings">⏰ เวลางาน</button>
         <button class="tab" data-tab="employees">👥 พนักงาน</button>
         <button class="tab" data-tab="logs">📋 รายงาน</button>
+        <button class="tab" data-tab="payroll">💰 ค่าแรง</button>
       </div>
 
       <div class="tab-panel" id="tab-locations">
@@ -316,6 +318,20 @@
       <div class="tab-panel hidden" id="tab-employees">
         <button class="btn primary block" id="btn-add-employee" style="margin-bottom:12px">＋ ลงทะเบียนพนักงาน / ใบหน้าใหม่</button>
         <div class="list" id="employee-list"></div>
+      </div>
+
+      <div class="tab-panel hidden" id="tab-payroll">
+        <div class="card">
+          <h3 style="margin-top:0">💰 สรุปค่าแรงพนักงานรายวัน (PDF)</h3>
+          <div class="row2">
+            <div class="field"><label for="pay-month">เดือน</label><input type="month" id="pay-month"></div>
+            <div class="field"><label for="pay-half">งวด</label>
+              <select id="pay-half"><option value="1">วันที่ 1-15 (จ่ายวันที่ 16)</option><option value="2">วันที่ 16-สิ้นเดือน (จ่ายวันที่ 1)</option></select></div>
+          </div>
+          <button class="btn primary block" id="btn-payroll">📄 สร้าง PDF สรุปค่าแรง</button>
+          <p class="small muted" style="margin-bottom:0">นับวันจากเวลาปกติหลังหักพัก: ครบ 4 ชม. = 0.5 วัน ครบ 8 ชม. = 1 วัน • ค่า OT ต่อชั่วโมงปัดขึ้นเป็นบาท • แยกตามสถานที่ลงเวลา</p>
+        </div>
+        <div id="payroll-result" style="margin-top:14px"></div>
       </div>
 
       <div class="tab-panel hidden" id="tab-logs">
@@ -448,6 +464,7 @@ function bindUI() {
   $('#btn-change-pin').addEventListener('click', changePin);
   $('#btn-add-employee').addEventListener('click', () => openEmployeeForm(null));
   $('#btn-load-logs').addEventListener('click', () => loadLogs($('#log-date').value));
+  $('#btn-payroll').addEventListener('click', makePayroll);
   $('#location-list').addEventListener('click', onLocationListClick);
   $('#employee-list').addEventListener('click', onEmployeeListClick);
   $('#employee-list').addEventListener('change', onEmployeeListChange);
@@ -1172,6 +1189,7 @@ async function loadAdmin() {
     $('#admin-panel').hidden = false;
     $('#btn-admin-logout').hidden = false;
     if (!$('#log-date').value) $('#log-date').value = d.today;
+    if (!$('#pay-month').value) setDefaultPayPeriod(d.today);
     renderLocations();
     renderSettings();
     renderEmployees();
@@ -1289,7 +1307,7 @@ function openLocationForm(loc) {
 
 /* ---------- ตั้งค่าเวลางาน ---------- */
 const SETTING_LABELS = {
-  EMPLOYEE_DB: 'ไฟล์ฐานข้อมูลพนักงาน (ลิงก์หรือ ID)',
+  EMPLOYEE_DB: 'ไฟล์ฐานข้อมูลพนักงาน (ลิงก์หรือ ID)', OT_RATE: 'อัตรา OT (เท่า)',
   COMPANY_NAME: 'ชื่อบริษัท', WORK_START: 'เวลาเข้างานมาตรฐาน', WORK_END: 'เวลาเลิกงานมาตรฐาน',
   LATE_GRACE_MIN: 'ผ่อนผันมาสาย (นาที)', OT_MIN_MINUTES: 'OT ขั้นต่ำ (นาที)', OT_ROUND_MIN: 'ปัดเศษ OT (นาที)', OT_MAX_MINUTES: 'เพดาน OT ต่อวัน (นาที)', REGULAR_WORK_MIN: 'เวลาทำงานปกติต่อวัน (นาที)', DAY_CUTOFF: 'เวลาตัดรอบวันทำงาน',
   FACE_MATCH_THRESHOLD: 'เกณฑ์ความเหมือนใบหน้า', MAX_GPS_ACCURACY_M: 'ความคลาดเคลื่อน GPS สูงสุด (ม.)',
@@ -1304,7 +1322,7 @@ function renderSettings() {
     if (s.type === 'time') input = `<input type="time" id="${id}" value="${esc(s.value)}">`;
     else if (s.type === 'bool') input = `<select id="${id}"><option value="TRUE" ${s.value === 'TRUE' ? 'selected' : ''}>เปิด</option><option value="FALSE" ${s.value !== 'TRUE' ? 'selected' : ''}>ปิด</option></select>`;
     else if (s.type === 'int') input = `<input type="number" min="0" step="1" id="${id}" value="${esc(s.value)}">`;
-    else if (s.type === 'float') input = `<input type="number" step="0.01" min="0.3" max="0.7" id="${id}" value="${esc(s.value)}">`;
+    else if (s.type === 'float') input = `<input type="number" step="0.01" ${s.key === 'FACE_MATCH_THRESHOLD' ? 'min="0.3" max="0.7"' : 'min="0"'} id="${id}" value="${esc(s.value)}">`;
     else input = `<input id="${id}" value="${esc(s.value)}">`;
     return `<div class="field" data-key="${esc(s.key)}"><label for="${id}">${esc(SETTING_LABELS[s.key] || s.key)}</label>${input}<div class="desc">${esc(s.description)}</div></div>`;
   }).join('');
@@ -1446,6 +1464,53 @@ function openEmployeeForm(emp) {
       } catch (err) { hideLoading(); if (!handleAuthError(err)) toast(err.message, 'err'); }
     }
   };
+}
+
+/* ---------- สรุปค่าแรง ---------- */
+// งวดล่าสุดที่ปิดแล้ว: ถ้าวันนี้ตั้งแต่วันที่ 16 = งวด 1-15 ของเดือนนี้, ไม่งั้น = งวด 16-สิ้นเดือนของเดือนก่อน
+function setDefaultPayPeriod(today) {
+  const [y, m, d] = today.split('-').map(Number);
+  let yy = y, mm = m, half = 1;
+  if (d < 16) { half = 2; mm = m - 1; if (mm < 1) { mm = 12; yy = y - 1; } }
+  $('#pay-month').value = yy + '-' + String(mm).padStart(2, '0');
+  $('#pay-half').value = String(half);
+}
+
+async function makePayroll() {
+  const v = $('#pay-month').value;
+  if (!v) return toast('กรุณาเลือกเดือน', 'err');
+  const [year, month] = v.split('-').map(Number);
+  showLoading('กำลังคำนวณค่าแรงและสร้าง PDF...');
+  try {
+    const r = await api('payrollReport', { token: state.adminToken, year, month, half: Number($('#pay-half').value) });
+    const n = x => Number(x || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const h1 = x => (Math.round(x * 100) / 100).toString();
+    $('#payroll-result').innerHTML = `
+      <div class="card">
+        <div class="item-top"><div><div class="item-title">งวด ${esc(r.label)} • จ่ายวันที่ ${esc(r.payDate)}</div>
+          <div class="item-sub">${r.rows.length} คน • โปรเจกต์: ${esc(r.projects.join(', ') || '-')}</div></div></div>
+        <div class="stats pay-stats" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:12px 0">
+          <div class="stat"><b>${n(r.totals.pay)}</b><span>รวมค่าแรง</span></div>
+          <div class="stat"><b>${n(r.totals.otPay)}</b><span>รวม OT</span></div>
+          <div class="stat"><b style="color:var(--primary)">${n(r.totals.total)}</b><span>รวมทั้งหมด</span></div>
+        </div>
+        <div class="item-actions" style="margin:0 0 10px">
+          <a class="btn primary sm" style="text-decoration:none" href="${esc(r.pdfUrl)}" target="_blank" rel="noopener">📄 เปิด PDF</a>
+          <a class="btn sm" style="text-decoration:none" href="${esc(r.sheetUrl)}" target="_blank" rel="noopener">📊 เปิดตารางในชีต</a>
+        </div>
+        ${r.warnings.length ? `<div class="item" style="border-color:#fecaca;background:#fef2f2;margin-bottom:10px">
+          <div class="item-title" style="color:var(--red)">⚠️ ต้องตรวจสอบก่อนจ่าย (${r.warnings.length})</div>
+          ${r.warnings.map(w => `<div class="item-sub">• ${esc(w)}</div>`).join('')}</div>` : ''}
+        <div class="list">${r.rows.map(x => `
+          <div class="item" style="padding:9px 12px"><div class="item-top">
+            <div><div class="item-title">${esc(x.name)} <span class="item-sub">(${esc(x.id)})</span></div>
+              <div class="item-sub">${h1(x.days)} วัน × ${n(x.wage)} • OT ${h1(x.otHours)} ชม. × ${x.otRate}</div></div>
+            <b>${n(x.total)}</b></div></div>`).join('')}
+        </div>
+      </div>`;
+    toast('สร้าง PDF เรียบร้อย', 'ok');
+  } catch (e) { if (!handleAuthError(e)) toast(e.message, 'err', 6000); }
+  finally { hideLoading(); }
 }
 
 /* ---------- รายงาน ---------- */
