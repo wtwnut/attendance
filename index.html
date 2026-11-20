@@ -242,7 +242,11 @@ html body #view-home .t-CLOCK_IN .a-icon{background:#f59e0b;color:#1f3864}
 html body #view-home .t-CLOCK_OUT .a-icon{background:#d9e1f2;color:#1f3864}
 html body .scan-view{background:#1f3864 url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20400%20300%22%3E%3Cpath%20fill%3D%22%2324427a%22%20d%3D%22M0%20300L180%200h90L90%20300z%22/%3E%3Cpath%20fill%3D%22%232a4b88%22%20d%3D%22M220%20300L400%2040v120L320%20300z%22/%3E%3Cpath%20fill%3D%22%231b315c%22%20d%3D%22M300%200h100v60z%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2240%22%20fill%3D%22none%22%20stroke%3D%22%232f5597%22%20stroke-width%3D%2210%22/%3E%3C/svg%3E") center/cover no-repeat}
 html body .cam-frame{background:#2a4b88}
-html body .cam-ring.ok{border-color:#f59e0b;box-shadow:0 0 0 6px rgba(245,158,11,.25)}
+/* กรอบวงรีรอบหน้า: แดง = ยังไม่พร้อม / เขียว = พร้อมถ่าย / ฟ้ากะพริบ = กำลังตรวจ-บันทึก */
+html body .cam-ring.warn{border-color:#ef4444;box-shadow:0 0 0 6px rgba(239,68,68,.25)}
+html body .cam-ring.ok{border-color:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.3),inset 0 0 30px rgba(34,197,94,.35)}
+html body .cam-ring.busy{border-color:#3b82f6;animation:ringBlink .7s ease-in-out infinite}
+@keyframes ringBlink{0%,100%{border-color:#3b82f6;box-shadow:0 0 0 6px rgba(59,130,246,.35)}50%{border-color:rgba(59,130,246,.25);box-shadow:0 0 0 2px rgba(59,130,246,.08)}}
 html body .step{background:rgba(255,255,255,.14);color:#d9e1f2}
 html body .step.current{background:#f59e0b;color:#1f3864}
 html body .step.done{background:#d9e1f2;color:#1f3864}
@@ -278,9 +282,9 @@ html body #view-home .action-btn .a-time{font-size:calc(var(--u)*1.7);padding:ca
   #view-scan .shot-thumb.filled{border:2px solid #22c55e}
   #view-scan .shot-thumb .x{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;font-size:12px;line-height:18px;text-align:center}
   #view-scan .shutter{width:calc(var(--u)*10.5);height:calc(var(--u)*10.5);min-width:64px;min-height:64px;border-radius:50%;border:4px solid #fff;background:transparent;padding:5px;cursor:pointer;transition:opacity .2s,transform .1s}
-  #view-scan .shutter span{display:block;width:100%;height:100%;border-radius:50%;background:#f59e0b}
-  #view-scan .shutter:disabled{opacity:.35}
-  #view-scan .shutter:disabled span{background:#9ca3af}
+  #view-scan .shutter span{display:block;width:100%;height:100%;border-radius:50%;background:#ffffff;box-shadow:0 0 18px rgba(255,255,255,.55)}   /* พร้อมถ่าย = สีขาว */
+  #view-scan .shutter:disabled{opacity:1;border-color:#6b7280}   /* ไม่พร้อม = สีเทา */
+  #view-scan .shutter:disabled span{background:#6b7280;box-shadow:none}
   #view-scan .shutter:not(:disabled):active{transform:scale(.92)}
   #view-scan .shot-done{display:flex;gap:10px}
   #view-scan .shot-done .btn{min-width:130px}
@@ -482,7 +486,7 @@ const CONFIG = {
   SCAN_TIMEOUT_MS: 45000,     // หมดเวลาการสแกน
   GPS_MAX_AGE_MS: 30000,      // ตำแหน่งต้องไม่เก่ากว่า 30 วินาที
   SAME_FACE_MAX_DIST: 0.55,   // ใบหน้าตอนเริ่ม-ตอนจบสแกนต้องเป็นคนเดียวกัน
-  APP_VERSION: '20.11-r5',      // แสดงมุมล่างหน้าแรก ใช้เช็กว่ามือถือโหลดไฟล์ล่าสุดแล้ว
+  APP_VERSION: '20.11-r7',      // แสดงมุมล่างหน้าแรก ใช้เช็กว่ามือถือโหลดไฟล์ล่าสุดแล้ว
   BOTTOM_GAP_PX: 16,          // เว้นขอบล่างของหน้าจอ (px) กันแถบเมนูเบราว์เซอร์บัง
   BOTTOM_GAP_SAMSUNG_PX: 64,  // Samsung Internet (แถบเมนูล่างสูงประมาณ 56px) ถ้ายังบังให้เพิ่ม
   BOTTOM_GAP_INAPP_PX: 48,    // เปิดจากในแอป LINE / Facebook
@@ -1058,7 +1062,7 @@ async function handleFrame(s, dets) {
   if (s.busy) return;
   const video = $('#video');
 
-  if (!dets.length) { s.stable = 0; setRing(''); setInstruction('ไม่พบใบหน้า — มองกล้องและอยู่ในที่มีแสงสว่าง'); return; }
+  if (!dets.length) { s.stable = 0; setRing('warn'); setInstruction('ไม่พบใบหน้า — มองกล้องและอยู่ในที่มีแสงสว่าง'); return; }
   if (dets.length > 1) { s.stable = 0; setRing('warn'); setInstruction('พบมากกว่า 1 ใบหน้า กรุณาสแกนทีละคน'); return; }
 
   const a = analyzeFace(dets[0], video);
@@ -1224,7 +1228,7 @@ function blinkTimedOut(s) {
 function handleBlinkMP(s, res) {
   if (blinkTimedOut(s)) return;
   const faces = res && res.faceLandmarks ? res.faceLandmarks.length : 0;
-  if (!faces) { setRing(''); setInstruction('ไม่พบใบหน้า — มองกล้องและอยู่ในที่มีแสงสว่าง'); return; }
+  if (!faces) { setRing('warn'); setInstruction('ไม่พบใบหน้า — มองกล้องและอยู่ในที่มีแสงสว่าง'); return; }
   if (faces > 1) { setRing('warn'); setInstruction('พบมากกว่า 1 ใบหน้า กรุณาสแกนทีละคน'); return; }
   const cats = (res.faceBlendshapes && res.faceBlendshapes[0] && res.faceBlendshapes[0].categories) || [];
   const score = name => { const c = cats.find(x => x.categoryName === name); return c ? c.score : 0; };
@@ -1309,7 +1313,7 @@ function renderShots(s) {
     setRing('ok');
     setInstruction('ถ่ายครบ ' + n + ' ภาพแล้ว<span class="small">ตรวจดูภาพด้านล่าง ถ้าภาพไหนไม่ชัด แตะที่ภาพเพื่อถ่ายใหม่</span>', true);
   } else if (s.phase !== 'loading') {
-    setInstruction('มองกล้องตรงๆ แล้วรอให้ปุ่มเปลี่ยนเป็นสีส้ม<span class="small">ภาพที่ ' + (s.shots.length + 1) + ' จาก ' + n + '</span>', true);
+    setInstruction('มองกล้องตรงๆ แล้วรอให้ปุ่มเปลี่ยนเป็นสีขาว<span class="small">ภาพที่ ' + (s.shots.length + 1) + ' จาก ' + n + '</span>', true);
   }
 }
 
@@ -1835,7 +1839,7 @@ function openEmployeeForm(emp) {
       <div class="field"><label>แผนก</label><input id="e-dept" value="${esc(e.department)}"></div>
       <div class="field"><label>ตำแหน่ง</label><input id="e-pos" value="${esc(e.position)}"></div>
     </div>
-    ${isNew ? '<div class="small muted" style="margin-bottom:10px">ขั้นต่อไประบบจะเปิดกล้องหน้า ให้ถ่ายภาพใบหน้า ' + CONFIG.REGISTER_SAMPLES + ' ภาพ โดยกดปุ่มถ่ายเองเมื่อปุ่มเป็นสีส้ม (ระบบใช้ภาพแรกเป็นรูปหลักฐาน 1 รูป)</div>' : ''}
+    ${isNew ? '<div class="small muted" style="margin-bottom:10px">ขั้นต่อไประบบจะเปิดกล้องหน้า ให้ถ่ายภาพใบหน้า ' + CONFIG.REGISTER_SAMPLES + ' ภาพ โดยกดปุ่มถ่ายเองเมื่อปุ่มเป็นสีขาว (ระบบใช้ภาพแรกเป็นรูปหลักฐาน 1 รูป)</div>' : ''}
     <div class="modal-actions"><button class="btn" id="e-cancel">ยกเลิก</button><button class="btn primary" id="e-save">${isNew ? '📷 ถัดไป: สแกนใบหน้า' : '💾 บันทึก'}</button></div>
   `);
   $('#e-cancel').onclick = closeModal;
