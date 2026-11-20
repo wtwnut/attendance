@@ -9,7 +9,7 @@
 <meta name="supported-color-schemes" content="light">
 <title>ระบบลงเวลาทำงาน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;600&display=swap" rel="stylesheet">
 <!-- face-api.js (เวอร์ชันที่ยังได้รับการดูแลโดย @vladmandic ใช้ API เดียวกับ face-api.js ต้นฉบับ) -->
 <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
 <style>
@@ -226,6 +226,9 @@ html body #view-home .action-btn .a-label{display:block}
 #view-home .action-btn .a-text{display:flex;flex-direction:column;align-items:flex-start}
 html body #view-scan .scan-instruction{display:block;text-align:center}
 html body #view-scan .scan-instruction .small{display:block;font-weight:400;opacity:.75}
+html body #view-scan .scan-instruction .ins-emo{display:block;font-size:max(26px,calc(var(--u)*4.2));line-height:1.15;margin-bottom:calc(var(--u)*.3)}
+html body #view-scan .scan-instruction .ins-th{display:block}
+html body #view-scan .scan-instruction .ins-mm{display:block;font-family:'Noto Sans Myanmar','Myanmar Text','Padauk',sans-serif;font-weight:600;font-size:max(14px,calc(var(--u)*2.1));line-height:1.6;color:#fde68a;margin-top:calc(var(--u)*.2)}
 
 html body{background:#f3f5fa}
 html body #view-home .hero{background:#1f3864 url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20400%20300%22%3E%3Cpath%20fill%3D%22%2324427a%22%20d%3D%22M0%20300L180%200h90L90%20300z%22/%3E%3Cpath%20fill%3D%22%232a4b88%22%20d%3D%22M220%20300L400%2040v120L320%20300z%22/%3E%3Cpath%20fill%3D%22%231b315c%22%20d%3D%22M300%200h100v60z%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2240%22%20fill%3D%22none%22%20stroke%3D%22%232f5597%22%20stroke-width%3D%2210%22/%3E%3C/svg%3E") center/cover no-repeat;color:#fff}
@@ -238,8 +241,12 @@ html body #view-home .loc-card.ok .loc-title{color:#15803d}
 html body #view-home .action-btn{box-shadow:none;border-radius:20px}
 html body #view-home .t-CLOCK_IN{background:#1f3864;color:#fff}
 html body #view-home .t-CLOCK_OUT{background:#fff;color:#1f3864;border:2px solid #1f3864}
-html body #view-home .t-CLOCK_IN .a-icon{background:#f59e0b;color:#1f3864}
-html body #view-home .t-CLOCK_OUT .a-icon{background:#d9e1f2;color:#1f3864}
+/* สีปุ่มตามความหมายสากล: เข้างาน = เขียว (เข้า/เริ่ม) • เลิกงาน = แดง (ออก/หยุด) ดูจากสีอย่างเดียวก็แยกได้ */
+html body #view-home .t-CLOCK_IN .a-icon{background:#16a34a;color:#fff;box-shadow:0 0 0 calc(var(--u)*1) rgba(22,163,74,.25)}
+html body #view-home .t-CLOCK_OUT .a-icon{background:#dc2626;color:#fff;box-shadow:0 0 0 calc(var(--u)*1) rgba(220,38,38,.18)}
+html body #view-home .action-btn .a-mm{display:block;font-family:'Noto Sans Myanmar','Myanmar Text','Padauk',sans-serif;font-weight:600;font-size:max(14px,calc(var(--u)*2.2));line-height:1.5;margin-top:calc(var(--u)*.2)}
+html body #view-home .t-CLOCK_IN .a-mm{color:#86efac}
+html body #view-home .t-CLOCK_OUT .a-mm{color:#dc2626}
 html body .scan-view{background:#1f3864 url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20400%20300%22%3E%3Cpath%20fill%3D%22%2324427a%22%20d%3D%22M0%20300L180%200h90L90%20300z%22/%3E%3Cpath%20fill%3D%22%232a4b88%22%20d%3D%22M220%20300L400%2040v120L320%20300z%22/%3E%3Cpath%20fill%3D%22%231b315c%22%20d%3D%22M300%200h100v60z%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2240%22%20fill%3D%22none%22%20stroke%3D%22%232f5597%22%20stroke-width%3D%2210%22/%3E%3C/svg%3E") center/cover no-repeat}
 html body .cam-frame{background:#2a4b88}
 /* กรอบวงรีรอบหน้า: แดง = ยังไม่พร้อม / เขียว = พร้อมถ่าย / ฟ้ากะพริบ = กำลังตรวจ-บันทึก */
@@ -335,8 +342,8 @@ html body #view-home .action-btn .a-time{font-size:calc(var(--u)*1.7);padding:ca
 
     <h3 class="section-title">เลือกประเภทการลงเวลา</h3>
     <div class="action-grid">
-      <button class="action-btn t-CLOCK_IN" data-type="CLOCK_IN"><span class="a-icon svg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l4-4-4-4"/><path d="M14 12H4"/></svg></span><span class="a-text"><span class="a-label">เข้างาน</span><span class="a-sub">Clock-in</span><span class="a-time" id="time-in"></span></span></button>
-      <button class="action-btn t-CLOCK_OUT" data-type="CLOCK_OUT"><span class="a-icon svg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4"/><path d="M16 16l4-4-4-4"/><path d="M20 12H10"/></svg></span><span class="a-text"><span class="a-label">เลิกงาน</span><span class="a-sub">Clock-out</span><span class="a-time" id="time-out"></span></span></button>
+      <button class="action-btn t-CLOCK_IN" data-type="CLOCK_IN"><span class="a-icon svg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l4-4-4-4"/><path d="M14 12H4"/></svg></span><span class="a-text"><span class="a-label">เข้างาน</span><span class="a-sub">Clock-in</span><span class="a-mm" lang="my">အလုပ်ဝင်</span><span class="a-time" id="time-in"></span></span></button>
+      <button class="action-btn t-CLOCK_OUT" data-type="CLOCK_OUT"><span class="a-icon svg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4"/><path d="M16 16l4-4-4-4"/><path d="M20 12H10"/></svg></span><span class="a-text"><span class="a-label">เลิกงาน</span><span class="a-sub">Clock-out</span><span class="a-mm" lang="my">အလုပ်ဆင်း</span><span class="a-time" id="time-out"></span></span></button>
     </div>
     <p class="hint">ตรวจ GPS ➜ สแกนใบหน้า ➜ ตรวจคนจริง ➜ บันทึกเวลา<br>เข้า-ออกได้หลายรอบ • เกิน 8 ชม./วัน (หักพัก) คิด OT อัตโนมัติ <span id="app-ver" style="opacity:.55;white-space:nowrap"></span></p>
   </main>
@@ -486,7 +493,7 @@ const CONFIG = {
   SCAN_TIMEOUT_MS: 45000,     // หมดเวลาการสแกน
   GPS_MAX_AGE_MS: 30000,      // ตำแหน่งต้องไม่เก่ากว่า 30 วินาที
   SAME_FACE_MAX_DIST: 0.55,   // ใบหน้าตอนเริ่ม-ตอนจบสแกนต้องเป็นคนเดียวกัน
-  APP_VERSION: '20.11-r7',      // แสดงมุมล่างหน้าแรก ใช้เช็กว่ามือถือโหลดไฟล์ล่าสุดแล้ว
+  APP_VERSION: '20.11-r9',      // แสดงมุมล่างหน้าแรก ใช้เช็กว่ามือถือโหลดไฟล์ล่าสุดแล้ว
   BOTTOM_GAP_PX: 16,          // เว้นขอบล่างของหน้าจอ (px) กันแถบเมนูเบราว์เซอร์บัง
   BOTTOM_GAP_SAMSUNG_PX: 64,  // Samsung Internet (แถบเมนูล่างสูงประมาณ 56px) ถ้ายังบังให้เพิ่ม
   BOTTOM_GAP_INAPP_PX: 48,    // เปิดจากในแอป LINE / Facebook
@@ -984,9 +991,61 @@ function renderSteps() {
   $('#scan-steps').innerHTML = steps.map(x => '<span class="step ' + x.st + '">' + esc(x.label) + '</span>').join('');
 }
 
+/* ---------------------------------------------------------------------
+ * คำแนะนำตอนสแกน: แสดง อีโมจิ + ภาษาไทย + ภาษาพม่า อัตโนมัติ
+ * จับคู่จากข้อความภาษาไทยที่ขึ้นต้นตรงกัน (เรียงคำยาวไว้ก่อน)
+ * ต้องการแก้คำแปล / อีโมจิ แก้ที่ตารางนี้ที่เดียว
+ * -------------------------------------------------------------------*/
+const SCAN_HINTS = [
+  ['กำลังเปิดกล้อง',                '📷', 'ကင်မရာ ဖွင့်နေသည်... ခဏစောင့်ပါ'],
+  ['กำลังเตรียมระบบ',               '⏳', 'ခဏစောင့်ပါ...'],
+  ['ไม่พบใบหน้า',                   '🔍', 'မျက်နှာ မတွေ့ပါ — ကင်မရာကို ကြည့်ပါ'],
+  ['พบมากกว่า 1 ใบหน้า',            '👥', 'တစ်ယောက်ချင်း စကင်ဖတ်ပါ'],
+  ['ขยับเข้าใกล้กล้อง',              '🤳', 'ကင်မရာနှင့် နီးနီးကပ်ပါ'],
+  ['ถอยห่างจากกล้อง',               '↩️', 'ကင်မရာမှ နည်းနည်း ဝေးဝေးနေပါ'],
+  ['จัดใบหน้าให้อยู่กลางกรอบ',        '🎯', 'မျက်နှာကို ဘောင်အလယ်မှာ ထားပါ'],
+  ['พบใบหน้าแล้ว',                  '✋', 'မျက်နှာ တွေ့ပြီ — မလှုပ်ပါနှင့်'],
+  ['หันหน้าไปทาง ซ้าย',              '⬅️', 'ဘယ်ဘက်သို့ ဖြည်းဖြည်း လှည့်ပါ'],
+  ['หันหน้าไปทาง ขวา',              '➡️', 'ညာဘက်သို့ ဖြည်းဖြည်း လှည့်ပါ'],
+  ['หันหน้าไปด้านซ้ายหรือขวา',        '↔️', 'ခေါင်းကို ဘယ် (သို့) ညာ နည်းနည်း လှည့်ပါ'],
+  ['หันหน้าตรงเข้ากล้อง',            '👀', 'ကင်မရာကို တည့်တည့် ကြည့်ပါ'],
+  ['ดีมาก! หันกลับมามองตรง',         '👍', 'ကောင်းပါတယ်! ကင်မရာကို ပြန်ကြည့်ပါ'],
+  ['ดีมาก! กลับมามองตรง',           '👍', 'ကောင်းပါတယ်! ကင်မရာကို ပြန်ကြည့်ပါ'],
+  ['ดีมาก! หุบปาก',                 '👍', 'ကောင်းပါတယ်! ပါးစပ် ပိတ်ပါ'],
+  ['ดีมาก! ลืมตา',                  '👍', 'ကောင်းပါတယ်! မျက်လုံး ဖွင့်ပါ'],
+  ['เงยหน้าขึ้น หรือก้มหน้าลง',       '↕️', 'ခေါင်းကို မော့ (သို့) ငုံ့ ပါ'],
+  ['เงยหน้าขึ้นเล็กน้อย',            '⬆️', 'ခေါင်းကို နည်းနည်း မော့ပါ'],
+  ['ก้มหน้าลงเล็กน้อย',              '⬇️', 'ခေါင်းကို နည်းနည်း ငုံ့ပါ'],
+  ['อ้าปาก',                       '👄', 'ပါးစပ်ကို ကျယ်ကျယ် ဟပါ'],
+  ['ลืมตามองกล้อง',                 '👁️', 'မျက်လုံးဖွင့်ပြီး ကင်မရာကို ကြည့်ပါ'],
+  ['ลืมตาตามปกติ',                  '👁️', 'မျက်လုံးကို ပုံမှန် ဖွင့်ထားပါ'],
+  ['หลับตา',                       '😌', 'မျက်လုံးမှိတ်ပြီး ပြန်ဖွင့်ပါ'],
+  ['กะพริบตา',                     '😉', 'မျက်တောင် ၁-၂ ကြိမ် ခတ်ပါ'],
+  ['ตรวจการกะพริบตาไม่สำเร็จ',       '🔄', 'ခေါင်းလှည့်ခြင်းဖြင့် စစ်ဆေးပါမည်'],
+  ['มองตรงเข้ากล้อง',               '👀', 'ကင်မရာကို တည့်တည့် ကြည့်ပါ'],
+  ['ค้างไว้... กำลังยืนยันตัวตน',      '⏳', 'မလှုပ်ပါနှင့် — စစ်ဆေးနေသည်'],
+  ['พร้อมแล้ว',                     '📸', 'အသင့်ဖြစ်ပြီ — ဓာတ်ပုံရိုက် ခလုတ်ကို နှိပ်ပါ'],
+  ['มองกล้องตรงๆ แล้วรอให้ปุ่ม',      '⚪', 'ကင်မရာကို ကြည့်ပြီး ခလုတ် အဖြူရောင် ဖြစ်သည်အထိ စောင့်ပါ'],
+  ['ถ่ายครบ',                      '✅', 'ဓာတ်ပုံ ပြည့်ပြီ — စစ်ပြီး သိမ်းပါ'],
+  ['กำลังตรวจภาพ',                  '⏳', 'စစ်ဆေးနေသည်... ခဏစောင့်ပါ'],
+  ['กำลังบันทึก',                   '⏳', 'သိမ်းဆည်းနေသည်... ခဏစောင့်ပါ']
+].sort((a, b) => b[0].length - a[0].length);
+
+// อีโมจิ/ลูกศรที่ติดมากับข้อความเดิม (ตัดออก แล้วใช้อีโมจิจากตารางแทน ไม่ให้ซ้ำ)
+const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2190}-\u{21FF}\u{2600}-\u{27BF}\u{2B05}-\u{2B07}\u{FE0F}]/gu;
+
 function setInstruction(text, html) {
   const el = $('#scan-instruction');
-  if (html) el.innerHTML = text; else el.textContent = text;
+  const src = html ? String(text) : esc(String(text));
+  const plain = src.replace(/<[^>]*>/g, '').replace(EMOJI_RE, '').replace(/\s+/g, ' ').trim();
+  const hit = SCAN_HINTS.find(x => plain.indexOf(x[0]) === 0);
+  if (!hit) { el.innerHTML = src; return; }
+  // แยกบรรทัดหลัก กับบรรทัดเล็ก (เช่น นับถอยหลัง / ภาพที่ 1 จาก 3) ให้ภาษาพม่าอยู่ระหว่างกลาง
+  const k = src.search(/(<br>)?<span class="small"/);
+  const main = (k >= 0 ? src.slice(0, k) : src).replace(EMOJI_RE, '').trim();
+  const small = k >= 0 ? src.slice(k).replace(/^<br>/, '') : '';
+  el.innerHTML = '<span class="ins-emo">' + hit[1] + '</span><span class="ins-th">' + main + '</span>' +
+    '<span class="ins-mm" lang="my">' + hit[2] + '</span>' + small;
 }
 function setRing(cls) { $('#cam-ring').className = 'cam-ring' + (cls ? ' ' + cls : ''); }
 
