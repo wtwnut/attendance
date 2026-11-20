@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1f3864">
+<!-- บอกเบราว์เซอร์ว่าหน้านี้ใช้สีของตัวเอง ไม่ต้องแปลงเป็นโหมดมืดอัตโนมัติ (Samsung Internet / Chrome) -->
+<meta name="color-scheme" content="only light">
+<meta name="supported-color-schemes" content="light">
 <title>ระบบลงเวลาทำงาน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -151,6 +154,17 @@
   :root{--u:min(1vh,1.6vw)}
   @supports (height:1dvh){:root{--u:min(1dvh,1.6vw)}}
   .fit-view.active{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+  /* --- กันแถบเมนูของเบราว์เซอร์บังหน้าจอ ---
+   * --app-h  = ความสูงพื้นที่ที่มองเห็นจริง (JavaScript วัดจาก window.innerHeight ทุกครั้งที่จอเปลี่ยนขนาด)
+   *            ใช้แทน 100dvh ซึ่งบางเบราว์เซอร์ (Samsung Internet, LINE, แท็บเล็ตบางรุ่น) รายงานสูงเกินจริง
+   * --bar-gap = ระยะเว้นขอบล่างเพิ่ม กันแถบเมนูแบบลอยทับ (ปรับได้ที่ CONFIG.BOTTOM_GAP_PX) */
+  :root{--bar-gap:16px;color-scheme:only light}
+  /* Samsung Internet จะไม่บังคับโหมดมืด ถ้าหน้าเว็บประกาศว่ารองรับโหมดมืดเอง
+     จึงใส่บล็อกนี้ไว้ (ใช้สีเดิมทุกอย่าง หน้าตาเหมือนโหมดสว่าง) */
+  @media (prefers-color-scheme: dark){ :root{color-scheme:only light} html,body{background:var(--bg);color:var(--text)} }
+  html.app-h{--u:min(calc(var(--app-h) / 100),1.6vw)}
+  html.app-h .fit-view.active{height:var(--app-h)}
+  .fit-view.active{box-sizing:border-box;padding-bottom:var(--bar-gap);overflow-y:auto;-webkit-overflow-scrolling:touch}  /* ถ้ายังล้นจอจริงๆ เลื่อนดูได้ ไม่โดนตัด */
   .fit-inner{width:100%;max-width:calc(var(--u) * 62.5);margin:0 auto}
 
   /* ---- หน้าหลัก ---- */
@@ -254,6 +268,33 @@ html body #view-home .action-btn .a-label{font-size:calc(var(--u)*4)}
 html body #view-home .action-btn .a-sub{font-size:calc(var(--u)*2)}
 html body #view-home .action-btn .a-time{font-size:calc(var(--u)*1.7);padding:calc(var(--u)*.6) calc(var(--u)*1.8)}
 
+  /* ---- ลงทะเบียนใบหน้า: ปุ่มถ่ายเอง + ภาพตัวอย่าง ---- */
+  #view-scan .shot-bar{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*1.4);padding:calc(var(--u)*.6) 16px 0}
+  #view-scan .shot-bar.hidden,#view-scan .shot-done.hidden,#view-scan .shot-actions.hidden{display:none}
+  #view-scan .shot-thumbs{display:flex;gap:calc(var(--u)*1.4);justify-content:center}
+  #view-scan .shot-thumb{position:relative;width:calc(var(--u)*8);height:calc(var(--u)*8);min-width:48px;min-height:48px;border-radius:14px;border:2px dashed rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(255,255,255,.75);overflow:hidden;background:rgba(255,255,255,.06);padding:0}
+  #view-scan .shot-thumb.next{border-color:#f59e0b;color:#f59e0b}
+  #view-scan .shot-thumb img{width:100%;height:100%;object-fit:cover}
+  #view-scan .shot-thumb.filled{border:2px solid #22c55e}
+  #view-scan .shot-thumb .x{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;font-size:12px;line-height:18px;text-align:center}
+  #view-scan .shutter{width:calc(var(--u)*10.5);height:calc(var(--u)*10.5);min-width:64px;min-height:64px;border-radius:50%;border:4px solid #fff;background:transparent;padding:5px;cursor:pointer;transition:opacity .2s,transform .1s}
+  #view-scan .shutter span{display:block;width:100%;height:100%;border-radius:50%;background:#f59e0b}
+  #view-scan .shutter:disabled{opacity:.35}
+  #view-scan .shutter:disabled span{background:#9ca3af}
+  #view-scan .shutter:not(:disabled):active{transform:scale(.92)}
+  #view-scan .shot-done{display:flex;gap:10px}
+  #view-scan .shot-done .btn{min-width:130px}
+  html body #view-scan .shot-done .btn.primary{background:#f59e0b;color:#1f2937;border-color:#f59e0b}
+  /* ขนาดตัวอักษร/ปุ่มขยายตามจอ (แท็บเล็ต 16:10 ไม่ให้ตัวเล็กเกิน) */
+  html body #view-scan .scan-instruction .small{font-size:max(13px,calc(var(--u)*1.8))}
+  #view-scan .shot-thumb{font-size:max(13px,calc(var(--u)*2));border-radius:calc(var(--u)*1.6)}
+  #view-scan .shot-thumb .x{width:max(18px,calc(var(--u)*2.4));height:max(18px,calc(var(--u)*2.4));line-height:max(18px,calc(var(--u)*2.4));font-size:max(12px,calc(var(--u)*1.5))}
+  html body #view-scan .shot-done .btn{font-size:max(15px,calc(var(--u)*2.1));padding:calc(var(--u)*1.3) calc(var(--u)*2.6);min-width:calc(var(--u)*17);border-radius:calc(var(--u)*1.6)}
+  #view-scan.registering .scan-steps{display:none}
+  #view-scan.registering .scan-meta{padding-top:calc(var(--u)*1)}
+  .cam-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+  .cam-flash.on{opacity:.85;transition:none}
+
   /* ข้อความ GPS ไม่ให้หน่วยหล่นบรรทัด */
   #view-home .loc-detail .nw{white-space:nowrap}
   /* หน้าผลลัพธ์: ไอคอนตามผล */
@@ -308,10 +349,22 @@ html body #view-home .action-btn .a-time{font-size:calc(var(--u)*1.7);padding:ca
     <div class="cam-frame">
       <video id="video" autoplay muted playsinline></video>
       <div class="cam-ring" id="cam-ring"></div>
+      <div class="cam-flash" id="cam-flash"></div>
     </div>
   </div>
   <div class="scan-instruction" id="scan-instruction">กำลังเตรียมกล้อง...</div>
   <div class="scan-steps" id="scan-steps"></div>
+  <!-- ลงทะเบียนใบหน้า: กดถ่ายเองเมื่อพร้อม (ซ่อนในโหมดลงเวลา) -->
+  <div class="shot-bar hidden" id="shot-bar">
+    <div class="shot-thumbs" id="shot-thumbs"></div>
+    <div class="shot-actions" id="shot-actions">
+      <button class="shutter" id="btn-shutter" aria-label="ถ่ายภาพ" disabled><span></span></button>
+    </div>
+    <div class="shot-done hidden" id="shot-done">
+      <button class="btn" id="btn-shot-reset">ถ่ายใหม่ทั้งหมด</button>
+      <button class="btn primary" id="btn-shot-save">บันทึกใบหน้า</button>
+    </div>
+  </div>
   <div class="scan-meta" id="scan-meta"></div>
 </section>
 
@@ -429,7 +482,11 @@ const CONFIG = {
   SCAN_TIMEOUT_MS: 45000,     // หมดเวลาการสแกน
   GPS_MAX_AGE_MS: 30000,      // ตำแหน่งต้องไม่เก่ากว่า 30 วินาที
   SAME_FACE_MAX_DIST: 0.55,   // ใบหน้าตอนเริ่ม-ตอนจบสแกนต้องเป็นคนเดียวกัน
-  REGISTER_SAMPLES: 3,        // จำนวนตัวอย่างใบหน้าตอนลงทะเบียน
+  BOTTOM_GAP_PX: 16,          // เว้นขอบล่างของหน้าจอ (px) กันแถบเมนูเบราว์เซอร์บัง ถ้ายังบังให้เพิ่มเป็น 24-40
+  REGISTER_SAMPLES: 3,        // จำนวนภาพตัวอย่างใบหน้าตอนลงทะเบียน (กดถ่ายเองทีละภาพ)
+  REG_EAR_MIN: 0.2,           // ค่าการเปิดตาขั้นต่ำตอนถ่ายลงทะเบียน (ต่ำกว่านี้ = หลับตา/กะพริบ)
+  REG_PITCH_MIN: 0.22,        // ช่วงองศาเงย/ก้มที่ยอมรับ (หน้าตรงประมาณ 0.35-0.40)
+  REG_PITCH_MAX: 0.55,        //   ต่ำกว่า MIN = เงยหน้า, สูงกว่า MAX = ก้มหน้า ถ้าเตือนบ่อยเกินให้ขยายช่วงนี้
   // ภารกิจตรวจคนจริง (ระบบจะสุ่มลำดับทุกครั้ง) เลือกใส่ได้ตามต้องการ:
   //   'TURN_LEFT'  = หันหน้าไปทางซ้าย แล้วกลับมาตรง
   //   'TURN_RIGHT' = หันหน้าไปทางขวา แล้วกลับมาตรง
@@ -498,6 +555,28 @@ function api(action, payload) {
 /* =====================================================================
  * เริ่มต้นระบบ
  * ===================================================================*/
+/* วัดความสูงจอที่มองเห็นจริง แล้วตั้งค่า --app-h ให้ CSS (กันแถบเมนูเบราว์เซอร์บังปุ่มด้านล่าง) */
+function fitToScreen() {
+  const root = document.documentElement;
+  const focused = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if (focused) return;                       // แป้นพิมพ์เปิดอยู่ ไม่ต้องย่อหน้าจอตาม
+  // ใช้ค่าที่เล็กที่สุดจากหลายแหล่ง: บางเบราว์เซอร์ (Samsung Internet) นับพื้นที่ใต้แถบเมนูรวมไปด้วย
+  const cands = [window.innerHeight, root.clientHeight, window.visualViewport && window.visualViewport.height]
+    .filter(v => v && v > 200);
+  if (!cands.length) return;
+  const h = Math.floor(Math.min.apply(null, cands));
+  root.style.setProperty('--app-h', h + 'px');
+  root.style.setProperty('--bar-gap', CONFIG.BOTTOM_GAP_PX + 'px');
+  root.classList.add('app-h');
+}
+fitToScreen();
+window.addEventListener('resize', fitToScreen);
+window.addEventListener('orientationchange', () => setTimeout(fitToScreen, 300));
+if (window.visualViewport) window.visualViewport.addEventListener('resize', fitToScreen);
+window.addEventListener('pageshow', fitToScreen);
+// บางเบราว์เซอร์รายงานขนาดจอที่ถูกต้องช้า วัดซ้ำอีก 2 ครั้งหลังเปิดหน้า
+setTimeout(fitToScreen, 400); setTimeout(fitToScreen, 1500);
+
 document.addEventListener('DOMContentLoaded', boot);
 
 async function boot() {
@@ -804,7 +883,7 @@ async function startCheckIn(type) {
 /* =====================================================================
  * ตัวสแกนใบหน้า + Liveness Detection
  *   mode 'checkin'  : ตรวจจับ ➜ ทำภารกิจคนจริง (กะพริบตา / หันหน้า สุ่มลำดับ) ➜ จับภาพ ➜ ส่งเซิร์ฟเวอร์
- *   mode 'register' : เก็บตัวอย่างใบหน้า 3 ครั้ง ➜ ส่งลงทะเบียน
+ *   mode 'register' : ระบบตรวจท่าหน้าให้ ➜ ผู้ใช้กดปุ่มถ่ายเองเมื่อพร้อม ทีละภาพ ครบ 3 ภาพ ➜ ดูภาพ ➜ กดบันทึก
  * ===================================================================*/
 async function openScanner(opts) {
   const s = {
@@ -812,9 +891,11 @@ async function openScanner(opts) {
     challenges: [], idx: 0, refDescriptor: null,
     earBase: null, earSamples: [], eyeClosed: false, closedFrames: 0, turned: false,
     mouthOpenFrames: 0, mouthOpened: false,
-    samples: [], photo: null, nextSampleAt: 0
+    samples: [], photo: null, nextSampleAt: 0,
+    shots: [], ready: false, readyMsg: '', earMax: 0
   };
   state.scan = s;
+  setupShotBar(s);
   const liveness = s.mode === 'checkin' && state.init && state.init.livenessEnabled;
   if (liveness) s.challenges = shuffle(CONFIG.LIVENESS_CHALLENGES);
 
@@ -823,7 +904,7 @@ async function openScanner(opts) {
     : '📝 ลงทะเบียนใบหน้า: ' + s.employee.employeeName;
   $('#scan-meta').textContent = s.mode === 'checkin'
     ? '📍 ' + s.loc.loc.name + ' • ห่าง ' + fmtDist(s.loc.distance)
-    : 'รหัส ' + s.employee.employeeId + ' • มองกล้องตรงๆ ในที่มีแสงสว่าง';
+    : 'รหัส ' + s.employee.employeeId + ' • ลืมตา มองกล้องตรงๆ ในที่มีแสงสว่าง';
   renderSteps();
   setRing('');
   setInstruction('กำลังเปิดกล้อง และโหลดโมเดล AI...<br><span class="small" style="opacity:.7">(ครั้งแรกอาจใช้เวลา 10-20 วินาที)</span>', true);
@@ -848,6 +929,8 @@ async function openScanner(opts) {
 
 function closeScanner() {
   if (state.scan) { state.scan.running = false; clearTimeout(state.scan.timer); }
+  $('#view-scan').classList.remove('registering');
+  $('#shot-bar').classList.add('hidden');
   state.scan = null;
   stopCamera();
 }
@@ -885,7 +968,7 @@ function setRing(cls) { $('#cam-ring').className = 'cam-ring' + (cls ? ' ' + cls
 async function scanLoop() {
   const s = state.scan;
   if (!s || !s.running) return;
-  if (Date.now() - s.startTime > CONFIG.SCAN_TIMEOUT_MS) {
+  if (s.mode !== 'register' && Date.now() - s.startTime > CONFIG.SCAN_TIMEOUT_MS) {
     closeScanner();
     return showResult(false, 'หมดเวลาการสแกน', 'ไม่สามารถยืนยันใบหน้าได้ภายในเวลาที่กำหนด กรุณาลองใหม่ในที่มีแสงสว่าง และมองกล้องตรงๆ');
   }
@@ -923,7 +1006,7 @@ async function scanLoop() {
 function analyzeFace(det, video) {
   const p = det.landmarks.positions;
   const box = det.detection.box;
-  const vw = video.videoWidth, vh = video.videoHeight;
+  const vw = video.videoWidth || video.width, vh = video.videoHeight || video.height;
   const ear = (eyeAspectRatio(p.slice(36, 42)) + eyeAspectRatio(p.slice(42, 48))) / 2;
   const l = p[36], r = p[45], nose = p[30];
   const yaw = (nose.x - l.x) / ((r.x - l.x) || 1); // ~0.5 = หน้าตรง, มากขึ้น = หันไปทางซ้ายของผู้ใช้
@@ -963,32 +1046,14 @@ async function handleFrame(s, dets) {
   if (a.size > 0.9) { s.stable = 0; setRing('warn'); setInstruction('ถอยห่างจากกล้องเล็กน้อย'); return; }
   if (!inChallenge && !a.centered) { s.stable = 0; setRing('warn'); setInstruction('จัดใบหน้าให้อยู่กลางกรอบ'); return; }
 
-  // ---------------- โหมดลงทะเบียน ----------------
+  // ---------------- โหมดลงทะเบียน: ตรวจท่าหน้า แล้วเปิดปุ่มถ่าย ----------------
   if (s.mode === 'register') {
-    if (!isFrontal(a)) { s.stable = 0; setRing('warn'); setInstruction('มองตรงเข้ากล้อง'); return; }
-    if (Date.now() < s.nextSampleAt) return;
+    if (s.shots.length >= CONFIG.REGISTER_SAMPLES) return;
+    s.earMax = Math.max(s.earMax * 0.995, a.ear);          // ค่าลืมตาสูงสุดของคนนี้ (ค่อยๆ ลดลงเผื่อเปลี่ยนท่า)
+    const why = regProblem(a, s.earMax);
+    if (why) { s.stable = 0; setReady(s, false, why); return; }
     s.stable++;
-    setRing('ok');
-    setInstruction('ค้างไว้... กำลังเก็บตัวอย่างที่ ' + (s.samples.length + 1) + '/' + CONFIG.REGISTER_SAMPLES);
-    if (s.stable < 3) return;
-    s.busy = true;
-    setRing('busy');
-    const canvas = snapshot(video);
-    const desc = await computeDescriptor(canvas);
-    s.busy = false;
-    s.stable = 0;
-    if (!desc) return;
-    if (s.samples.length && euclid(desc, s.samples[0]) > CONFIG.SAME_FACE_MAX_DIST) {
-      s.samples = []; s.photo = null; renderSteps();
-      setInstruction('ใบหน้าไม่ตรงกับตัวอย่างแรก เริ่มเก็บใหม่');
-      return;
-    }
-    s.samples.push(desc);
-    if (!s.photo) s.photo = makePhoto(canvas, ['ลงทะเบียน: ' + s.employee.employeeName, thaiDateTime()]);
-    renderSteps();
-    if (s.samples.length >= CONFIG.REGISTER_SAMPLES) return submitRegister(s);
-    s.nextSampleAt = Date.now() + 900;
-    setInstruction('✔ เก็บตัวอย่างแล้ว — ขยับศีรษะเล็กน้อย แล้วมองกล้องอีกครั้ง');
+    if (s.stable >= 2) setReady(s, true, 'พร้อมแล้ว — กดปุ่ม <b>ถ่ายภาพ</b> ด้านล่าง');
     return;
   }
 
@@ -1157,6 +1222,123 @@ function handleBlinkMP(s, res) {
   }
 }
 
+/* =====================================================================
+ * ลงทะเบียนใบหน้าแบบกดถ่ายเอง
+ *   - ระหว่างเล็งกล้อง ระบบตรวจท่าหน้าทุกเฟรม ปุ่มถ่ายกดได้เมื่อ หน้าตรง ไม่เงย/ไม่ก้ม ลืมตา อยู่กลางกรอบ
+ *   - กดถ่ายแล้วตรวจภาพนิ่งซ้ำอีกครั้ง ถ้าหลับตา/หน้าไม่ตรง จะไม่รับภาพนั้น
+ *   - แตะภาพตัวอย่างเพื่อลบแล้วถ่ายใหม่ได้ ครบ 3 ภาพแล้วกด "บันทึกใบหน้า"
+ * ===================================================================*/
+function regProblem(a, earMax) {
+  if (a.yaw <= 0.38 || a.yaw >= 0.62) return 'หันหน้าตรงเข้ากล้อง (อย่าหันข้าง)';
+  if (a.pitch < CONFIG.REG_PITCH_MIN) return 'ก้มหน้าลงเล็กน้อย (ตอนนี้เงยหน้าอยู่)';
+  if (a.pitch > CONFIG.REG_PITCH_MAX) return 'เงยหน้าขึ้นเล็กน้อย (ตอนนี้ก้มหน้าอยู่)';
+  if (a.ear < CONFIG.REG_EAR_MIN || (earMax > 0 && a.ear < earMax * 0.72)) return 'ลืมตาตามปกติ';
+  return '';
+}
+
+function setReady(s, ok, msg) {
+  s.ready = ok;
+  const btn = $('#btn-shutter');
+  if (btn) btn.disabled = !ok || s.busy;
+  setRing(ok ? 'ok' : 'warn');
+  const n = Math.min(s.shots.length + 1, CONFIG.REGISTER_SAMPLES);
+  setInstruction(msg + '<span class="small">ภาพที่ ' + n + ' จาก ' + CONFIG.REGISTER_SAMPLES + '</span>', true);
+}
+
+function setupShotBar(s) {
+  const reg = s.mode === 'register';
+  $('#view-scan').classList.toggle('registering', reg);
+  $('#shot-bar').classList.toggle('hidden', !reg);
+  if (!reg) return;
+  $('#btn-shutter').onclick = () => takeShot(s);
+  $('#btn-shot-reset').onclick = () => { s.shots = []; renderShots(s); };
+  $('#btn-shot-save').onclick = () => {
+    if (s.shots.length < CONFIG.REGISTER_SAMPLES) return;
+    s.samples = s.shots.map(x => x.desc);
+    s.photo = s.shots[0].photo;
+    $('#btn-shot-save').disabled = true; $('#btn-shot-reset').disabled = true;
+    submitRegister(s);
+  };
+  renderShots(s);
+}
+
+function renderShots(s) {
+  const n = CONFIG.REGISTER_SAMPLES;
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    const x = s.shots[i];
+    html += x
+      ? '<button class="shot-thumb filled" data-i="' + i + '" aria-label="ลบภาพที่ ' + (i + 1) + '"><img src="' + x.thumb + '" alt=""><span class="x">✕</span></button>'
+      : '<div class="shot-thumb' + (i === s.shots.length ? ' next' : '') + '">' + (i + 1) + '</div>';
+  }
+  $('#shot-thumbs').innerHTML = html;
+  $$('#shot-thumbs .shot-thumb.filled').forEach(b => b.onclick = () => {
+    if (s.busy || s.phase === 'submit') return;
+    s.shots.splice(+b.dataset.i, 1);
+    renderShots(s);
+  });
+  const full = s.shots.length >= n;
+  $('#shot-actions').classList.toggle('hidden', full);
+  $('#shot-done').classList.toggle('hidden', !full);
+  $('#btn-shot-save').disabled = false; $('#btn-shot-reset').disabled = false;
+  $('#btn-shutter').disabled = true;
+  s.ready = false; s.stable = 0;
+  if (full) {
+    setRing('ok');
+    setInstruction('ถ่ายครบ ' + n + ' ภาพแล้ว<span class="small">ตรวจดูภาพด้านล่าง ถ้าภาพไหนไม่ชัด แตะที่ภาพเพื่อถ่ายใหม่</span>', true);
+  } else if (s.phase !== 'loading') {
+    setInstruction('มองกล้องตรงๆ แล้วรอให้ปุ่มเปลี่ยนเป็นสีส้ม<span class="small">ภาพที่ ' + (s.shots.length + 1) + ' จาก ' + n + '</span>', true);
+  }
+}
+
+async function takeShot(s) {
+  if (!s.ready || s.busy || s.shots.length >= CONFIG.REGISTER_SAMPLES) return;
+  s.busy = true;
+  $('#btn-shutter').disabled = true;
+  const fl = $('#cam-flash'); fl.classList.add('on'); setTimeout(() => fl.classList.remove('on'), 60);
+  setRing('busy');
+  setInstruction('กำลังตรวจภาพ...');
+  const video = $('#video');
+  const canvas = snapshot(video);
+  let det = null;
+  try {
+    det = await faceapi
+      .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions({ inputSize: CONFIG.DESCRIPTOR_INPUT, scoreThreshold: 0.5 }))
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+  } catch (e) { console.warn(e); }
+  s.busy = false;
+  if (state.scan !== s) return;
+  if (!det) { toast('ภาพนี้ไม่พบใบหน้า ลองถ่ายใหม่', 'err'); s.stable = 0; return; }
+  // ตรวจภาพนิ่งซ้ำ: กันกรณีกะพริบตา/ขยับหน้าตอนกดพอดี
+  const a = analyzeFace(det, canvas);
+  const why = regProblem(a, s.earMax);
+  if (why) { toast('ภาพนี้ใช้ไม่ได้: ' + why.replace(/ \(.*\)/, ''), 'err'); s.stable = 0; return; }
+  const desc = Array.from(det.descriptor).map(x => Math.round(x * 100000) / 100000);
+  if (s.shots.length && euclid(desc, s.shots[0].desc) > CONFIG.SAME_FACE_MAX_DIST) {
+    toast('ใบหน้าไม่ตรงกับภาพแรก กรุณาให้คนเดิมถ่าย', 'err'); s.stable = 0; return;
+  }
+  s.shots.push({
+    desc,
+    thumb: faceThumb(canvas, det.detection.box),
+    photo: makePhoto(canvas, ['ลงทะเบียน: ' + s.employee.employeeName, thaiDateTime()])   // ภาพแรกที่เหลืออยู่ = รูปหลักฐาน
+  });
+  renderShots(s);
+}
+
+/** ครอปเฉพาะใบหน้าเป็นภาพเล็ก (กลับด้านเหมือนกระจก) ใช้แสดงให้ตรวจดู */
+function faceThumb(canvas, box) {
+  const S = 120, m = box.width * 0.35;
+  const x = Math.max(0, box.x - m), y = Math.max(0, box.y - m);
+  const w = Math.min(canvas.width - x, box.width + m * 2), hh = Math.min(canvas.height - y, box.height + m * 2);
+  const side = Math.min(w, hh);
+  const c = document.createElement('canvas'); c.width = S; c.height = S;
+  const ctx = c.getContext('2d');
+  ctx.translate(S, 0); ctx.scale(-1, 1);
+  ctx.drawImage(canvas, x + (w - side) / 2, y + (hh - side) / 2, side, side, 0, 0, S, S);
+  return c.toDataURL('image/jpeg', 0.8);
+}
+
 /** ถ่ายภาพเฟรมปัจจุบันจากวิดีโอ */
 function snapshot(video) {
   const c = document.createElement('canvas');
@@ -1242,6 +1424,7 @@ async function submitCheckIn(s, descriptor, canvas) {
 
 async function submitRegister(s) {
   s.running = false;
+  s.phase = 'submit';
   setRing('busy');
   setInstruction('กำลังบันทึกข้อมูลใบหน้า...');
   try {
@@ -1479,7 +1662,7 @@ function openLocationForm(loc) {
 const SETTING_LABELS = {
   EMPLOYEE_DB: 'ไฟล์ฐานข้อมูลพนักงาน (ลิงก์หรือ ID)', OT_RATE: 'อัตรา OT (เท่า)',
   COMPANY_NAME: 'ชื่อบริษัท', WORK_START: 'เวลาเข้างานมาตรฐาน', WORK_END: 'เวลาเลิกงานมาตรฐาน',
-  LATE_GRACE_MIN: 'ผ่อนผันมาสาย (นาที)', OT_MIN_MINUTES: 'OT ขั้นต่ำ (นาที)', OT_ROUND_MIN: 'ปัดเศษ OT (นาที)', OT_MAX_MINUTES: 'เพดาน OT ต่อวัน (นาที)', REGULAR_WORK_MIN: 'เวลาทำงานปกติต่อวัน (นาที)', DAY_CUTOFF: 'เวลาตัดรอบวันทำงาน',
+  LATE_GRACE_MIN: 'ผ่อนผันมาสาย (นาที)', DAY_TOLERANCE_MIN: 'ผ่อนผันตอนนับวันทำงาน (นาที)', OT_MIN_MINUTES: 'OT ขั้นต่ำ (นาที)', OT_ROUND_MIN: 'ปัดเศษ OT (นาที)', OT_MAX_MINUTES: 'เพดาน OT ต่อวัน (นาที)', REGULAR_WORK_MIN: 'เวลาทำงานปกติต่อวัน (นาที)', DAY_CUTOFF: 'เวลาตัดรอบวันทำงาน',
   FACE_MATCH_THRESHOLD: 'เกณฑ์ความเหมือนใบหน้า', MAX_GPS_ACCURACY_M: 'ความคลาดเคลื่อน GPS สูงสุด (ม.)',
   DEFAULT_RADIUS_M: 'รัศมีเริ่มต้น (ม.)', DUPLICATE_BLOCK_MIN: 'กันบันทึกซ้ำภายใน (นาที)',
   LIVENESS_ENABLED: 'ตรวจคนจริง (กะพริบตา/หันหน้า)', SAVE_PHOTO: 'บันทึกรูปถ่ายหลักฐาน', TIMEZONE: 'เขตเวลา'
@@ -1609,7 +1792,7 @@ function openEmployeeForm(emp) {
       <div class="field"><label>แผนก</label><input id="e-dept" value="${esc(e.department)}"></div>
       <div class="field"><label>ตำแหน่ง</label><input id="e-pos" value="${esc(e.position)}"></div>
     </div>
-    ${isNew ? '<div class="small muted" style="margin-bottom:10px">ขั้นต่อไประบบจะเปิดกล้องหน้าเพื่อเก็บตัวอย่างใบหน้า ' + CONFIG.REGISTER_SAMPLES + ' ครั้ง ให้พนักงานถือมือถือเองและมองกล้องตรงๆ</div>' : ''}
+    ${isNew ? '<div class="small muted" style="margin-bottom:10px">ขั้นต่อไประบบจะเปิดกล้องหน้า ให้ถ่ายภาพใบหน้า ' + CONFIG.REGISTER_SAMPLES + ' ภาพ โดยกดปุ่มถ่ายเองเมื่อปุ่มเป็นสีส้ม (ระบบใช้ภาพแรกเป็นรูปหลักฐาน 1 รูป)</div>' : ''}
     <div class="modal-actions"><button class="btn" id="e-cancel">ยกเลิก</button><button class="btn primary" id="e-save">${isNew ? '📷 ถัดไป: สแกนใบหน้า' : '💾 บันทึก'}</button></div>
   `);
   $('#e-cancel').onclick = closeModal;
