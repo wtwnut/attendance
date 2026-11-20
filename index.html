@@ -778,7 +778,8 @@ function renderLocation_() {
     card.classList.add('bad');
     setLocIcon('block');
     $('#loc-title').textContent = 'อยู่นอกพื้นที่ลงเวลา';
-    $('#loc-detail').textContent = 'ใกล้สุด: ' + r.nearest.loc.name + ' ห่าง ' + fmtDist(r.nearest.distance) + ' (อนุญาต ' + r.nearest.loc.radius + ' ม.)';
+    $('#loc-detail').textContent = 'ใกล้สุด: ' + r.nearest.loc.name + ' ห่าง ' + fmtDist(r.nearest.distance) +
+      (state.init.offsiteAllowed ? ' • ผู้ที่ได้รับสิทธิ์ลงเวลานอกพื้นที่ สแกนได้ตามปกติ' : ' (อนุญาต ' + r.nearest.loc.radius + ' ม.)');
   }
 }
 
@@ -868,12 +869,17 @@ async function startCheckIn(type) {
   catch (e) { hideLoading(); return showResult(false, 'ระบุตำแหน่งไม่ได้', e.message); }
   hideLoading();
 
-  if (pos.acc > state.init.maxGpsAccuracy) {
-    return showResult(false, 'สัญญาณ GPS ไม่แม่นยำพอ',
-      'ความคลาดเคลื่อน ±' + Math.round(pos.acc) + ' ม. (ต้องไม่เกิน ±' + state.init.maxGpsAccuracy + ' ม.) กรุณาเปิดโหมดตำแหน่งแม่นยำสูง หรือออกไปที่โล่งแล้วลองใหม่');
-  }
   const r = findLocation(pos);
-  if (!r.inside) {
+  const inaccurate = pos.acc > state.init.maxGpsAccuracy;
+  if (inaccurate || !r.inside) {
+    // นอกพื้นที่ / GPS ไม่แม่น: ถ้ามีพนักงานที่ได้รับสิทธิ์ "ลงเวลานอกพื้นที่" ให้สแกนต่อได้
+    // เซิร์ฟเวอร์จะตรวจหลังจับคู่ใบหน้าว่าคนนี้ได้รับสิทธิ์จริงหรือไม่ และบันทึกพิกัดจริงไว้ตรวจย้อนหลัง
+    if (state.init.offsiteAllowed) {
+      return openScanner({ mode: 'checkin', type, offsite: true,
+        loc: { loc: { name: 'นอกพื้นที่', radius: '' }, distance: r.nearest.distance, nearestName: r.nearest.loc.name } });
+    }
+    if (inaccurate) return showResult(false, 'สัญญาณ GPS ไม่แม่นยำพอ',
+      'ความคลาดเคลื่อน ±' + Math.round(pos.acc) + ' ม. (ต้องไม่เกิน ±' + state.init.maxGpsAccuracy + ' ม.) กรุณาเปิดโหมดตำแหน่งแม่นยำสูง หรือออกไปที่โล่งแล้วลองใหม่');
     return showResult(false, 'อยู่นอกพื้นที่ลงเวลา',
       'ห่างจาก "' + r.nearest.loc.name + '" ประมาณ ' + fmtDist(r.nearest.distance) + ' (อนุญาตไม่เกิน ' + r.nearest.loc.radius + ' ม.)');
   }
@@ -903,7 +909,9 @@ async function openScanner(opts) {
     ? TYPES[s.type].icon + ' ' + TYPES[s.type].label + ' (' + TYPES[s.type].en + ')'
     : '📝 ลงทะเบียนใบหน้า: ' + s.employee.employeeName;
   $('#scan-meta').textContent = s.mode === 'checkin'
-    ? '📍 ' + s.loc.loc.name + ' • ห่าง ' + fmtDist(s.loc.distance)
+    ? (s.offsite
+      ? '📍 นอกพื้นที่ (ใกล้ ' + s.loc.nearestName + ' ' + fmtDist(s.loc.distance) + ') • เฉพาะพนักงานที่ได้รับสิทธิ์ลงเวลานอกพื้นที่'
+      : '📍 ' + s.loc.loc.name + ' • ห่าง ' + fmtDist(s.loc.distance))
     : 'รหัส ' + s.employee.employeeId + ' • ลืมตา มองกล้องตรงๆ ในที่มีแสงสว่าง';
   renderSteps();
   setRing('');
@@ -1388,7 +1396,8 @@ async function submitCheckIn(s, descriptor, canvas) {
   const pos = state.pos;
   const photo = makePhoto(canvas, [
     TYPES[s.type].label + ' • ' + thaiDateTime(),
-    s.loc.loc.name + ' (ห่าง ' + fmtDist(s.loc.distance) + ')',
+    s.offsite ? 'นอกพื้นที่ (ใกล้ ' + s.loc.nearestName + ' ' + fmtDist(s.loc.distance) + ')'
+      : s.loc.loc.name + ' (ห่าง ' + fmtDist(s.loc.distance) + ')',
     'GPS ' + pos.lat.toFixed(6) + ', ' + pos.lng.toFixed(6) + ' ±' + Math.round(pos.acc) + 'm'
   ]);
   try {
@@ -1398,6 +1407,7 @@ async function submitCheckIn(s, descriptor, canvas) {
       lat: pos.lat, lng: pos.lng, accuracy: pos.acc,
       photo,
       liveness: s.challenges.length > 0,
+      offsite: !!s.offsite,
       userAgent: navigator.userAgent.slice(0, 200)
     });
     closeScanner();
@@ -1411,8 +1421,13 @@ async function submitCheckIn(s, descriptor, canvas) {
       ['ประเภท', res.typeLabel],
       ['วันที่', formatThaiDate(res.date)],
       ['เวลา', res.time + ' น.'],
-      ['สถานที่', res.locationName],
-      ['ระยะห่าง', fmtDist(res.distance) + ' (รัศมี ' + res.radius + ' ม.)'],
+      ...(res.offsite ? [
+        ['สถานที่', 'นอกพื้นที่ (ใกล้ ' + res.nearestName + ' ห่าง ' + fmtDist(res.distance) + ')'],
+        ['พิกัดที่บันทึก', '<a href="' + esc(res.mapLink) + '" target="_blank" rel="noopener">🗺️ ดูบนแผนที่</a>', true]
+      ] : [
+        ['สถานที่', res.locationName],
+        ['ระยะห่าง', fmtDist(res.distance) + ' (รัศมี ' + res.radius + ' ม.)']
+      ]),
       ['สถานะ', '<span class="chip ' + (late || /ก่อนเวลา|ไม่พบ|ตรวจสอบ/.test(res.status) ? 'red' : (res.otMinutes > 0 ? 'violet' : 'green')) + '">' + esc(res.status) + '</span>', true],
       ['รูปถ่ายหลักฐาน', res.photoSaved ? 'บันทึกแล้ว' : '-']
     ], late ? '⏰' : '✅');
@@ -1728,6 +1743,7 @@ function renderEmployees() {
     if (master && !e.inMaster) chips.push('<span class="chip red">ไม่อยู่ในฐานข้อมูลพนักงาน</span>');
     else if (master && !e.active) chips.push(`<span class="chip gray">${esc(e.status)}</span>`);
     chips.push(face ? `<span class="chip green">ใบหน้า ✓ ${e.sampleCount} ตัวอย่าง</span>` : '<span class="chip amber">ยังไม่ลงทะเบียนใบหน้า</span>');
+    if (e.offsite) chips.push('<span class="chip violet">📍 ลงเวลานอกพื้นที่ได้</span>');
     const canScan = !master || (e.inMaster && e.active);
     return `
     <div class="item"${master && (!e.inMaster || !e.active) ? ' style="opacity:.65"' : ''}>
@@ -1891,7 +1907,9 @@ function renderLogs(logs, date) {
       <div class="item-top">
         <div>
           <div class="item-title">${esc(l.time.slice(0, 5))} น. • ${esc(l.employeeName)}</div>
-          <div class="item-sub">📍 ${esc(l.locationName)} (ห่าง ${fmtDist(l.distance)})</div>
+          <div class="item-sub">${l.locationName === 'นอกพื้นที่'
+            ? '<span class="chip amber">📍 นอกพื้นที่</span> ห่างสถานที่ใกล้สุด ' + fmtDist(l.distance)
+            : '📍 ' + esc(l.locationName) + ' (ห่าง ' + fmtDist(l.distance) + ')'}</div>
         </div>
         <span class="chip ${t.chip}">${t.icon} ${esc(t.label)}</span>
       </div>
