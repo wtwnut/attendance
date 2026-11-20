@@ -19,7 +19,7 @@
     --radius:18px; --shadow:0 6px 24px rgba(30,41,80,.08);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Noto Sans Thai',system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.5}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Noto Sans Thai','Noto Sans Myanmar',system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.5}
   button{font-family:inherit;cursor:pointer}
   input,select{font-family:inherit;font-size:16px}
   .view{display:none;min-height:100vh}
@@ -162,7 +162,7 @@
   /* Samsung Internet จะไม่บังคับโหมดมืด ถ้าหน้าเว็บประกาศว่ารองรับโหมดมืดเอง
      จึงใส่บล็อกนี้ไว้ (ใช้สีเดิมทุกอย่าง หน้าตาเหมือนโหมดสว่าง) */
   @media (prefers-color-scheme: dark){ :root{color-scheme:only light} html,body{background:var(--bg);color:var(--text)} }
-  html.app-h{--u:min(calc(var(--app-h) / 100),1.6vw)}
+  html.app-h{--u:min(calc((var(--app-h) - var(--bar-gap)) / 100),1.6vw)}   /* หักระยะเว้นขอบล่างออกก่อน ทุกอย่างจึงย่อให้พอดี */
   html.app-h .fit-view.active{height:var(--app-h)}
   .fit-view.active{box-sizing:border-box;padding-bottom:var(--bar-gap);overflow-y:auto;-webkit-overflow-scrolling:touch}  /* ถ้ายังล้นจอจริงๆ เลื่อนดูได้ ไม่โดนตัด */
   .fit-inner{width:100%;max-width:calc(var(--u) * 62.5);margin:0 auto}
@@ -306,6 +306,19 @@ html body #view-home .action-btn .a-time{font-size:calc(var(--u)*1.7);padding:ca
   .cam-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
   .cam-flash.on{opacity:.85;transition:none}
 
+  /* ---- ปุ่มเปลี่ยนภาษา (ใต้ปุ่มตั้งค่า ขนาดเท่ากัน) ---- */
+  #view-home .hero-btns{position:relative;flex-shrink:0}
+  /* วางปุ่มภาษาลอยใต้ปุ่มตั้งค่า ไม่ดันความสูงส่วนหัว (นาฬิกาอยู่ตรงกลาง ไม่ชนกัน) */
+  #view-home .hero-btns .lang-btn{position:absolute;top:calc(100% + var(--u)*1);right:0;z-index:2}
+  #view-home .action-grid{min-height:0}
+  #view-home .action-btn{min-height:0;overflow:hidden}
+  #view-home .lang-btn{flex-direction:column;gap:2px;padding:0}
+  #view-home .lang-btn svg{width:74%;height:auto;border-radius:3px;box-shadow:0 0 0 1px rgba(255,255,255,.55)}
+  html[data-lang="my"] #view-home .action-btn .a-mm{display:none}
+  html[data-lang="my"] body{font-family:'Noto Sans Myanmar','Noto Sans Thai',system-ui,sans-serif}
+  html[data-lang="my"] #view-scan .scan-instruction .ins-mm.main{color:#fff;font-size:max(17px,calc(var(--u)*2.6));line-height:1.6;margin-top:0}
+  html[data-lang="my"] #view-scan .scan-instruction .ins-th.sub{font-size:max(13px,calc(var(--u)*1.8));font-weight:500;opacity:.75;margin-top:calc(var(--u)*.2)}
+
   /* ข้อความ GPS ไม่ให้หน่วยหล่นบรรทัด */
   #view-home .loc-detail .nw{white-space:nowrap}
   /* หน้าผลลัพธ์: ไอคอนตามผล */
@@ -322,13 +335,17 @@ html body #view-home .action-btn .a-time{font-size:calc(var(--u)*1.7);padding:ca
   <header class="hero">
     <div class="hero-top">
       <div>
-        <div class="company" id="company-name">กำลังโหลด...</div>
+        <div class="company" id="company-name" data-noi18n>กำลังโหลด...</div>
         <div class="hero-sub">ระบบลงเวลาทำงานด้วยใบหน้า</div>
       </div>
-      <button class="icon-btn svg-ic" id="btn-admin" aria-label="ผู้ดูแลระบบ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/><circle cx="12" cy="12" r="6.5"/></svg></button>
+      <div class="hero-btns">
+        <button class="icon-btn svg-ic" id="btn-admin" aria-label="ผู้ดูแลระบบ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/><circle cx="12" cy="12" r="6.5"/></svg></button>
+        <!-- ปุ่มเปลี่ยนภาษา: แสดงธงของภาษาที่จะเปลี่ยนไป -->
+        <button class="icon-btn lang-btn" id="btn-lang" aria-label="ဗမာဘာသာ (Myanmar)"></button>
+      </div>
     </div>
-    <div class="clock" id="clock-time">--:--:--</div>
-    <div class="date" id="clock-date">&nbsp;</div>
+    <div class="clock" id="clock-time" data-noi18n>--:--:--</div>
+    <div class="date" id="clock-date" data-noi18n>&nbsp;</div>
   </header>
   <main class="container fit-inner home-main">
     <div class="card loc-card" id="loc-card">
@@ -363,7 +380,7 @@ html body #view-home .action-btn .a-time{font-size:calc(var(--u)*1.7);padding:ca
       <div class="cam-flash" id="cam-flash"></div>
     </div>
   </div>
-  <div class="scan-instruction" id="scan-instruction">กำลังเตรียมกล้อง...</div>
+  <div class="scan-instruction" id="scan-instruction" data-noi18n>กำลังเตรียมกล้อง...</div>
   <div class="scan-steps" id="scan-steps"></div>
   <!-- ลงทะเบียนใบหน้า: กดถ่ายเองเมื่อพร้อม (ซ่อนในโหมดลงเวลา) -->
   <div class="shot-bar hidden" id="shot-bar">
@@ -460,6 +477,18 @@ html body #view-home .action-btn .a-time{font-size:calc(var(--u)*1.7);padding:ca
           <p class="small muted" style="margin-bottom:0">นับวันจากเวลาปกติหลังหักพัก: ครบ 4 ชม. = 0.5 วัน ครบ 8 ชม. = 1 วัน • ค่า OT ต่อชั่วโมงปัดขึ้นเป็นบาท • แยกตามสถานที่ลงเวลา</p>
         </div>
         <div id="payroll-result" style="margin-top:14px"></div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-top:0">👔 สรุปเงินเดือนพนักงานรายเดือน (PDF)</h3>
+          <div class="row2">
+            <div class="field"><label for="sal-month">เดือน</label><input type="month" id="sal-month"></div>
+            <div class="field"><label for="sal-emp">พนักงาน</label>
+              <select id="sal-emp"><option value="">ทุกคน (พนักงานรายเดือน)</option></select></div>
+          </div>
+          <button class="btn primary block" id="btn-salary">📄 สร้าง PDF สรุปเงินเดือน</button>
+          <p class="small muted" style="margin-bottom:0">เงินเดือนจากไฟล์ฐานข้อมูลพนักงาน (จ่ายเต็มเดือน) • ค่า OT ต่อชั่วโมง = เงินเดือน ÷ 30 ÷ 8 × 1.5 ปัดขึ้นเป็นบาท • แสดงวันมาทำงานและมาสายไว้ตรวจสอบ • เลือกรายคนได้ จะได้ PDF ของคนนั้นพร้อมรายละเอียดรายวัน</p>
+        </div>
+        <div id="salary-result" style="margin-top:14px"></div>
       </div>
 
       <div class="tab-panel hidden" id="tab-logs">
@@ -493,7 +522,7 @@ const CONFIG = {
   SCAN_TIMEOUT_MS: 45000,     // หมดเวลาการสแกน
   GPS_MAX_AGE_MS: 30000,      // ตำแหน่งต้องไม่เก่ากว่า 30 วินาที
   SAME_FACE_MAX_DIST: 0.55,   // ใบหน้าตอนเริ่ม-ตอนจบสแกนต้องเป็นคนเดียวกัน
-  APP_VERSION: '20.11-r9',      // แสดงมุมล่างหน้าแรก ใช้เช็กว่ามือถือโหลดไฟล์ล่าสุดแล้ว
+  APP_VERSION: '20.11-r11',      // แสดงมุมล่างหน้าแรก ใช้เช็กว่ามือถือโหลดไฟล์ล่าสุดแล้ว
   BOTTOM_GAP_PX: 16,          // เว้นขอบล่างของหน้าจอ (px) กันแถบเมนูเบราว์เซอร์บัง
   BOTTOM_GAP_SAMSUNG_PX: 64,  // Samsung Internet (แถบเมนูล่างสูงประมาณ 56px) ถ้ายังบังให้เพิ่ม
   BOTTOM_GAP_INAPP_PX: 48,    // เปิดจากในแอป LINE / Facebook
@@ -528,7 +557,7 @@ const TYPES = {
 };
 
 const state = {
-  init: null, serverOffset: 0,
+  init: null, serverOffset: 0, lang: 'th',
   pos: null, gpsError: null, gpsWatch: null,
   modelsPromise: null, stream: null, scan: null,
   adminToken: null, adminData: null, prevView: 'home', resultTimer: null
@@ -605,6 +634,7 @@ document.addEventListener('DOMContentLoaded', boot);
 
 async function boot() {
   bindUI();
+  initLang();
   startClock();
   startGps();
   try {
@@ -640,6 +670,7 @@ function bindUI() {
   $('#btn-add-employee').addEventListener('click', () => openEmployeeForm(null));
   $('#btn-load-logs').addEventListener('click', () => loadLogs($('#log-date').value));
   $('#btn-payroll').addEventListener('click', makePayroll);
+  $('#btn-salary').addEventListener('click', makeSalary);
   $('#location-list').addEventListener('click', onLocationListClick);
   $('#employee-list').addEventListener('click', onEmployeeListClick);
   $('#employee-list').addEventListener('change', onEmployeeListChange);
@@ -653,13 +684,17 @@ function showView(name) {
 }
 
 /* ---------- นาฬิกา (อิงเวลาเซิร์ฟเวอร์) ---------- */
+// วันที่ภาษาพม่า: ถ้าเบราว์เซอร์ไม่มีข้อมูลภาษาพม่า ใช้ภาษาอังกฤษแทน
+const MY_LOCALE = (() => { try { return new Intl.DateTimeFormat('my-MM').resolvedOptions().locale.indexOf('my') === 0 ? 'my-MM' : 'en-GB'; } catch (e) { return 'en-GB'; } })();
 function nowServer() { return new Date(Date.now() + state.serverOffset); }
 function startClock() {
   const tick = () => {
     const d = nowServer();
     $('#clock-time').textContent = d.toLocaleTimeString('th-TH', { hour12: false, timeZone: CONFIG.TZ });
-    $('#clock-date').textContent = d.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: CONFIG.TZ });
+    $('#clock-date').textContent = d.toLocaleDateString(state.lang === 'my' ? MY_LOCALE : 'th-TH',
+      { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: CONFIG.TZ });
   };
+  window.tickClock = tick;
   tick();
   setInterval(tick, 1000);
 }
@@ -1036,17 +1071,248 @@ const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2190}-\u{21FF}\u{2600}-\u{27BF}\u{2B05}
 
 function setInstruction(text, html) {
   const el = $('#scan-instruction');
+  if (state.scan) state.scan.lastIns = [text, html];          // จำไว้ เผื่อสลับภาษาระหว่างสแกน
   const src = html ? String(text) : esc(String(text));
   const plain = src.replace(/<[^>]*>/g, '').replace(EMOJI_RE, '').replace(/\s+/g, ' ').trim();
   const hit = SCAN_HINTS.find(x => plain.indexOf(x[0]) === 0);
-  if (!hit) { el.innerHTML = src; return; }
+  if (!hit) { el.innerHTML = state.lang === 'my' ? myTrHtml(src) : src; return; }
   // แยกบรรทัดหลัก กับบรรทัดเล็ก (เช่น นับถอยหลัง / ภาพที่ 1 จาก 3) ให้ภาษาพม่าอยู่ระหว่างกลาง
   const k = src.search(/(<br>)?<span class="small"/);
   const main = (k >= 0 ? src.slice(0, k) : src).replace(EMOJI_RE, '').trim();
   const small = k >= 0 ? src.slice(k).replace(/^<br>/, '') : '';
+  if (state.lang === 'my') {
+    // โหมดพม่า: ภาษาพม่าเป็นบรรทัดหลัก ภาษาไทยเป็นบรรทัดรอง
+    el.innerHTML = '<span class="ins-emo">' + hit[1] + '</span><span class="ins-mm main" lang="my">' + hit[2] + '</span>' +
+      '<span class="ins-th sub">' + main + '</span>' + myTrHtml(small);
+    return;
+  }
   el.innerHTML = '<span class="ins-emo">' + hit[1] + '</span><span class="ins-th">' + main + '</span>' +
     '<span class="ins-mm" lang="my">' + hit[2] + '</span>' + small;
 }
+
+/** แปลข้อความภาษาไทยในชิ้น HTML (เฉพาะส่วนข้อความ ไม่แตะแท็ก) */
+function myTrHtml(html) {
+  return String(html).replace(/>([^<]+)</g, (a, t) => '>' + myTr(t) + '<').replace(/^([^<]+)/, t => myTr(t));
+}
+
+/* =====================================================================
+ * สลับภาษา ไทย ⇄ พม่า (เฉพาะหน้าพนักงาน: หน้าแรก / สแกน / ผลลัพธ์ / แจ้งเตือน)
+ *   - ค่าเริ่มต้น = ภาษาไทย (เหมือนเดิม) เลือกพม่าแล้วเครื่องนั้นจะจำไว้
+ *   - วิธีทำงาน: แปลข้อความภาษาไทยบนหน้าจอเป็นพม่าอัตโนมัติจากตาราง MY_RULES
+ *     ข้อความที่ไม่มีในตาราง จะยังเป็นภาษาไทย (ไม่หาย) — เพิ่มคำแปลได้ที่ตารางนี้
+ *   - หน้า Admin คงเป็นภาษาไทย
+ * ===================================================================*/
+const MY_MONTHS = { 'มกราคม': 'ဇန်နဝါရီ', 'กุมภาพันธ์': 'ဖေဖော်ဝါရီ', 'มีนาคม': 'မတ်', 'เมษายน': 'ဧပြီ',
+  'พฤษภาคม': 'မေ', 'มิถุนายน': 'ဇွန်', 'กรกฎาคม': 'ဇူလိုင်', 'สิงหาคม': 'ဩဂုတ်', 'กันยายน': 'စက်တင်ဘာ',
+  'ตุลาคม': 'အောက်တိုဘာ', 'พฤศจิกายน': 'နိုဝင်ဘာ', 'ธันวาคม': 'ဒီဇင်ဘာ' };
+
+// [รูปแบบภาษาไทย (ทั้งข้อความ), คำแปลพม่า] — $1 $2 = ส่วนที่ดึงมาจากข้อความเดิม, ฟังก์ชัน = แปลซ้อน
+const MY_RULES = [
+  // ---------- หน้าแรก ----------
+  ['กำลังโหลด...', 'ဖွင့်နေသည်...'],
+  ['ระบบลงเวลาทำงานด้วยใบหน้า', 'မျက်နှာဖြင့် အလုပ်ချိန် မှတ်တမ်းစနစ်'],
+  ['กำลังค้นหาตำแหน่ง GPS...', 'GPS တည်နေရာ ရှာနေသည်...'],
+  ['กรุณาอนุญาตการเข้าถึงตำแหน่งเมื่อเบราว์เซอร์ถาม', 'ဘရောက်ဇာက မေးလျှင် တည်နေရာ ခွင့်ပြုပါ'],
+  ['ไม่สามารถระบุตำแหน่ง', 'တည်နေရာ မသိရပါ'],
+  ['ไม่สามารถระบุตำแหน่งได้', 'တည်နေရာ မသိရပါ'],
+  ['ได้ตำแหน่งแล้ว', 'တည်နေရာ ရပြီ'],
+  [/^ความแม่นยำ (.+)$/, m => 'တိကျမှု ' + myUnits(m[1])],
+  ['ยังไม่ได้ตั้งค่าสถานที่ทำงาน', 'အလုပ်နေရာ မသတ်မှတ်ရသေးပါ'],
+  ['กรุณาให้ผู้ดูแลเพิ่มสถานที่ในหน้า Admin', 'စီမံသူကို အလုပ်နေရာ ထည့်ခိုင်းပါ'],
+  [/^อยู่ในพื้นที่: (.+)$/, 'လုပ်ငန်းခွင်အတွင်း: $1'],
+  [/^ห่างจุดเช็กอิน (.+?) \(รัศมี (.+?)\) • GPS (.+)$/, m => 'အကွာအဝေး ' + myUnits(m[1]) + ' (အချင်းဝက် ' + myUnits(m[2]) + ') • GPS ' + myUnits(m[3])],
+  ['สัญญาณ GPS ยังไม่แม่นยำ', 'GPS အချက်ပြ မတိကျသေးပါ'],
+  [/^ความคลาดเคลื่อน (.+?) \(ต้องไม่เกิน (.+?)\).*$/, m => 'GPS အမှား ' + myUnits(m[1]) + ' (အများဆုံး ' + myUnits(m[2]) + ') — ခဏစောင့်ပါ (သို့) ကွင်းပြင်သို့ ထွက်ပါ'],
+  ['อยู่นอกพื้นที่ลงเวลา', 'လုပ်ငန်းခွင် ဧရိယာ အပြင်ဘက်တွင် ရှိနေသည်'],
+  [/^ใกล้สุด: (.+?) ห่าง (.+?) • ผู้ที่ได้รับสิทธิ์.*$/, m => 'အနီးဆုံး: ' + m[1] + ' (' + myUnits(m[2]) + ' ဝေး) • ခွင့်ပြုထားသူ စကင်ဖတ်နိုင်သည်'],
+  [/^ใกล้สุด: (.+?) ห่าง (.+?) \(อนุญาต (.+?)\)$/, m => 'အနီးဆုံး: ' + m[1] + ' (' + myUnits(m[2]) + ' ဝေး, ခွင့်ပြု ' + myUnits(m[3]) + ')'],
+  ['เลือกประเภทการลงเวลา', 'အမျိုးအစား ရွေးပါ'],
+  [/^เวลาเข้างาน (.+?) น\.$/, 'အလုပ်ဝင်ချိန် $1'],
+  [/^เวลาเลิกงาน (.+?) น\.$/, 'အလုပ်ဆင်းချိန် $1'],
+  ['ตรวจ GPS ➜ สแกนใบหน้า ➜ ตรวจคนจริง ➜ บันทึกเวลา', 'GPS စစ် ➜ မျက်နှာ စကင် ➜ လူအစစ် စစ်ဆေး ➜ အချိန်မှတ်'],
+  [/^เข้า-ออกได้หลายรอบ.*$/, 'အကြိမ်ကြိမ် ဝင်/ထွက် နိုင်သည် • တစ်ရက် ၈ နာရီ ကျော်လျှင် OT အလိုအလျောက် '],
+  ['กำลังตรวจสอบตำแหน่ง GPS...', 'GPS တည်နေရာ စစ်နေသည်...'],
+  ['อุปกรณ์นี้ไม่รองรับ GPS', 'ဤဖုန်းတွင် GPS မရှိပါ'],
+  [/^ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง.*$/, 'တည်နေရာ ခွင့်ပြုချက် မရှိပါ — ဘရောက်ဇာတွင် Location ခွင့်ပြုပြီး ပြန်ဖွင့်ပါ'],
+  [/^ไม่พบสัญญาณ GPS.*$/, 'GPS အချက်ပြ မတွေ့ပါ — ဖုန်း၏ Location/GPS ကို ဖွင့်ပါ'],
+  [/^ค้นหาตำแหน่งนานเกินไป.*$/, 'တည်နေရာ ရှာချိန် ကြာလွန်းသည် — ပြန်နှိပ်ပါ'],
+  // ---------- หน้าสแกน ----------
+  [/^(.*)ลงทะเบียนใบหน้า: (.+)$/, '$1မျက်နှာ စာရင်းသွင်း: $2'],
+  [/^📍 นอกพื้นที่ \(ใกล้ (.+?) (\S+ \S+)\) • .*$/, m => '📍 ဧရိယာပြင်ပ (' + m[1] + ' အနီး ' + myUnits(m[2]) + ') • ခွင့်ပြုထားသူသာ'],
+  [/^📍 (.+?) • ห่าง (.+)$/, m => '📍 ' + m[1] + ' • ' + myUnits(m[2]) + ' ဝေး'],
+  [/^รหัส (.+?) • ลืมตา.*$/, 'ID $1 • မျက်လုံးဖွင့်ပြီး လင်းသောနေရာတွင် ကင်မရာကို ကြည့်ပါ'],
+  ['ตรวจจับใบหน้า', 'မျက်နှာ ရှာ'], ['กะพริบตา', 'မျက်တောင်ခတ်'], ['หันหน้า', 'ခေါင်းလှည့်'],
+  ['ยืนยันตัวตน', 'အတည်ပြု'], ['อ้าปาก', 'ပါးစပ်ဟ'], ['หันซ้าย', 'ဘယ်လှည့်'], ['หันขวา', 'ညာလှည့်'],
+  ['เงย/ก้มหน้า', 'မော့/ငုံ့'],
+  ['ถ่ายใหม่ทั้งหมด', 'အားလုံး ပြန်ရိုက်'], ['บันทึกใบหน้า', 'မျက်နှာ သိမ်းမည်'],
+  [/^ภาพที่ (\d+) จาก (\d+)$/, 'ဓာတ်ပုံ $1 / $2'],
+  [/^\((\d+) วินาที\)$/, '($1 စက္ကန့်)'],
+  [/^ตรวจดูภาพด้านล่าง.*$/, 'အောက်က ဓာတ်ပုံများ စစ်ပါ — မကြည်လျှင် ပုံကို နှိပ်ပြီး ပြန်ရိုက်ပါ'],
+  [/^\(ครั้งแรกอาจใช้เวลา.*\)$/, '(ပထမအကြိမ် ၁၀-၂၀ စက္ကန့် ကြာနိုင်သည်)'],
+  ['(หันผิดทาง)', '(ဘက်မှားနေသည်)'],
+  ['เปลี่ยนเป็นการหันหน้าแทน', 'ခေါင်းလှည့်ခြင်းဖြင့် စစ်ဆေးမည်'],
+  [/^ภาพนี้หาใบหน้าไม่เจอ.*$/, 'ဤပုံတွင် မျက်နှာ မတွေ့ပါ — ဖုန်းကို ငြိမ်ငြိမ်ကိုင်ပြီး ပြန်နှိပ်ပါ'],
+  [/^ภาพนี้ใช้ไม่ได้: (.+)$/, m => 'ဤပုံ သုံးမရပါ: ' + (myHintOf(m[1]) || m[1])],
+  [/^ใบหน้าไม่ตรงกับภาพแรก.*$/, 'ပထမပုံနှင့် မျက်နှာ မတူပါ — လူတစ်ယောက်တည်း ရိုက်ပါ'],
+  // ---------- หน้าผลลัพธ์ ----------
+  [/^บันทึก(เข้างาน|เลิกงาน)สำเร็จ$/, m => myTr(m[1]) + ' မှတ်တမ်း အောင်မြင်ပါသည်'],
+  ['บันทึกไม่สำเร็จ', 'မှတ်တမ်း မအောင်မြင်ပါ'],
+  ['ลงทะเบียนไม่สำเร็จ', 'စာရင်းသွင်း မအောင်မြင်ပါ'],
+  ['ระบุตำแหน่งไม่ได้', 'တည်နေရာ မသိရပါ'],
+  ['สัญญาณ GPS ไม่แม่นยำพอ', 'GPS မတိကျပါ'],
+  ['เริ่มการสแกนไม่สำเร็จ', 'စကင် မစနိုင်ပါ'],
+  ['หมดเวลาการสแกน', 'စကင်ချိန် ကုန်သွားပြီ'],
+  ['เกิดข้อผิดพลาด', 'အမှား ဖြစ်ပွားသည်'],
+  ['ตรวจพบความผิดปกติ', 'ပုံမှန်မဟုတ်သည်ကို တွေ့ရှိသည်'],
+  [/^ไม่สามารถยืนยันใบหน้าได้ภายในเวลา.*$/, 'သတ်မှတ်ချိန်အတွင်း မျက်နှာ အတည်မပြုနိုင်ပါ — လင်းသောနေရာတွင် ကင်မရာကို တည့်တည့်ကြည့်ပြီး ထပ်စမ်းပါ'],
+  [/^ใบหน้าระหว่างการสแกนไม่ใช่คนเดียวกัน.*$/, 'စကင်ဖတ်စဉ် မျက်နှာ မတူပါ — ပြန်စကင်ဖတ်ပါ'],
+  [/^ห่างจาก "(.+?)" ประมาณ (.+?) \(อนุญาตไม่เกิน (.+?)\)$/, m => '"' + m[1] + '" မှ ' + myUnits(m[2]) + ' ဝေးသည် (ခွင့်ပြု ' + myUnits(m[3]) + ')'],
+  // ข้อความจากเซิร์ฟเวอร์
+  [/^คุณอยู่นอกพื้นที่ลงเวลา — (.+)$/, m => 'လုပ်ငန်းခွင် ဧရိယာ အပြင်ဘက်တွင် ရှိနေသည် — ' + myTr(m[1])],
+  [/^อยู่นอกพื้นที่ลงเวลา — (.+)$/, m => 'လုပ်ငန်းခွင် ဧရိယာ အပြင်ဘက်တွင် ရှိနေသည် — ' + myTr(m[1])],
+  [/^คุณ(.+?) ไม่ได้รับสิทธิ์ลงเวลานอกพื้นที่ — (.+)$/, m => m[1] + ' — ဧရိယာပြင်ပ မှတ်တမ်းတင်ခွင့် မရှိပါ။ ' + myTr(m[2])],
+  [/^ไม่พบใบหน้านี้ในระบบ.*$/, 'ဤမျက်နှာကို စနစ်တွင် မတွေ့ပါ (သို့) မကြည်ပါ — လင်းသောနေရာတွင် ထပ်စမ်းပါ'],
+  [/^คุณ(.+?) เพิ่งบันทึก "(.+?)" ไปแล้วเมื่อ (.+?) น\.$/, m => m[1] + ' — "' + myTr(m[2]) + '" ကို ' + m[3] + ' တွင် မှတ်ပြီးပါပြီ'],
+  [/^คุณลงเวลาเลิกงานไปแล้วเมื่อ (.+?) น\..*$/, '$1 တွင် အလုပ်ဆင်း မှတ်ပြီးပါပြီ — အလုပ်ပြန်စလျှင် "အလုပ်ဝင်" ကို အရင်နှိပ်ပါ'],
+  [/^ระบบกำลังทำงานหนัก.*$/, 'စနစ် အလုပ်များနေသည် — ထပ်စမ်းပါ'],
+  [/^ไม่ได้รับพิกัด GPS.*$/, 'GPS တည်နေရာ မရပါ'],
+  [/^สัญญาณ GPS ไม่แม่นยำพอ \(คลาดเคลื่อน (.+?) เกินเกณฑ์ (.+?)\).*$/, m => 'GPS မတိကျပါ (အမှား ' + myUnits(m[1]) + ', အများဆုံး ' + myUnits(m[2]) + ') — ကွင်းပြင်သို့ ထွက်ပြီး ထပ်စမ်းပါ'],
+  [/^รหัส (.+?) ไม่อยู่ในฐานข้อมูลพนักงาน.*$/, 'ID $1 ဝန်ထမ်းစာရင်းတွင် မရှိပါ — စီမံသူကို ဆက်သွယ်ပါ'],
+  [/^คุณ(.+?) มีสถานะ "(.+?)".*$/, '$1 ($2) — အချိန်မှတ်ခွင့် မရှိပါ'],
+  [/^ยังไม่มีพนักงานที่ลงทะเบียนใบหน้า.*$/, 'မျက်နှာ စာရင်းသွင်းထားသူ မရှိသေးပါ'],
+  [/^(เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ.*|Failed to fetch|Load failed|NetworkError.*)$/, 'ဆာဗာ ချိတ်ဆက်မရပါ — အင်တာနက် စစ်ပြီး ထပ်စမ်းပါ'],
+  [/^ยังเชื่อมต่อเซิร์ฟเวอร์ไม่ได้.*$/, 'ဆာဗာ ချိတ်ဆက်မရသေးပါ — စာမျက်နှာ ပြန်ဖွင့်ပါ'],
+  [/^คุณ(\S{1,24})$/, '$1'],                                   // ชื่อพนักงาน "คุณนัท" → "นัท"
+  // แถวรายละเอียด
+  ['ประเภท', 'အမျိုးအစား'], ['วันที่', 'ရက်စွဲ'], ['เวลา', 'အချိန်'], ['สถานที่', 'နေရာ'],
+  ['ระยะห่าง', 'အကွာအဝေး'], ['สถานะ', 'အခြေအနေ'], ['รูปถ่ายหลักฐาน', 'သက်သေ ဓာတ်ပုံ'],
+  ['บันทึกแล้ว', 'သိမ်းပြီး'], ['พิกัดที่บันทึก', 'မှတ်ထားသော တည်နေရာ'], ['🗺️ ดูบนแผนที่', '🗺️ မြေပုံတွင် ကြည့်ရန်'],
+  ['⏱️ เวลาปกติวันนี้', '⏱️ ယနေ့ ပုံမှန်အချိန်'], ['🌙 OT วันนี้', '🌙 ယနေ့ OT'],
+  [/^(\d\d:\d\d(:\d\d)?) น\.$/, '$1'],
+  [/^(\d{1,2}) (\S+) (\d{4})$/, m => MY_MONTHS[m[2]] ? m[1] + ' ' + MY_MONTHS[m[2]] + ' ' + (+m[3] > 2400 ? +m[3] - 543 : m[3]) : null],
+  ['กลับหน้าหลัก', 'ပင်မစာမျက်နှာသို့'],
+  [/^กลับหน้าหลักอัตโนมัติใน (\d+) วินาที$/, '$1 စက္ကန့်အတွင်း ပင်မသို့ ပြန်မည်'],
+  // สถานะการลงเวลา (แยกทีละส่วนที่คั่นด้วย •)
+  ['ปกติ', 'ပုံမှန်'],
+  [/^มาสาย (.+)$/, m => 'နောက်ကျ ' + myUnits(m[1])],
+  [/^ออกก่อนเวลา (.+)$/, m => 'စောထွက် ' + myUnits(m[1])],
+  [/^OT (.+)$/, m => 'OT ' + myUnits(m[1])],
+  [/^เข้างานรอบที่ (\d+)$/, 'အလုပ်ဝင် အကြိမ် $1'],
+  ['เข้างานนอกเวลากะปกติ', 'ပုံမှန်အချိန်ပြင်ပ အလုပ်ဝင်'],
+  [/^ลงเวลานอกพื้นที่ \(ใกล้ (.+?) ห่าง (.+?)\)$/, m => 'ဧရိယာပြင်ပ မှတ်တမ်း (' + m[1] + ' အနီး ' + myUnits(m[2]) + ')'],
+  [/^นอกพื้นที่ \(ใกล้ (.+?) ห่าง (.+?)\)$/, m => 'ဧရိယာပြင်ပ (' + m[1] + ' အနီး ' + myUnits(m[2]) + ' ဝေး)'],
+  ['นอกพื้นที่', 'ဧရိယာပြင်ပ'],
+  // คำเดี่ยว
+  ['เข้างาน', 'အလုပ်ဝင်'], ['เลิกงาน', 'အလုပ်ဆင်း']
+];
+
+/** แปลงหน่วยไทย → พม่า เช่น "12 ม." → "12 မီတာ" */
+function myUnits(s) {
+  return String(s)
+    .replace(/(\d)\s*กม\./g, '$1 ကီလိုမီတာ').replace(/(\d)\s*ม\./g, '$1 မီတာ')
+    .replace(/(\d)\s*ชม\./g, '$1 နာရီ').replace(/(\d)\s*นาที/g, '$1 မိနစ်').replace(/(\d)\s*วินาที/g, '$1 စက္ကန့်')
+    .replace(/(\d+)m\b/g, '$1 မီတာ');
+}
+
+function myRule(s) {
+  for (const [pat, out] of MY_RULES) {
+    if (typeof pat === 'string') { if (s === pat) return out; continue; }
+    const m = s.match(pat);
+    if (!m) continue;
+    const r = typeof out === 'function' ? out(m) : s.replace(pat, out);
+    if (r != null) return r;
+  }
+  return null;
+}
+
+/** แปลข้อความไทย 1 ชิ้นเป็นพม่า (ไม่มีในตาราง = คืนข้อความเดิม) */
+function myTr(text) {
+  const raw = String(text);
+  const lead = raw.match(/^\s*/)[0], tail = raw.match(/\s*$/)[0];
+  const s = raw.trim();
+  if (!s || !/[\u0E00-\u0E7F]/.test(s)) return raw;           // ไม่มีอักษรไทย ไม่ต้องแปล
+  let r = myRule(s);
+  if (r == null && s.indexOf(' • ') > 0) {                     // ข้อความหลายส่วน เช่น "ออกก่อนเวลา 30 นาที • OT 1 ชม."
+    r = s.split(' • ').map(p => { const x = myRule(p); return x == null ? myUnits(p) : x; }).join(' • ');
+  }
+  if (r == null) {                                             // นำหน้าด้วยอีโมจิ เช่น "🏢 เข้างาน (Clock-in)"
+    const m = s.match(/^(\S+\s)(.+?)(\s\(.+\))?$/u);
+    if (m && !/[\u0E00-\u0E7F]/.test(m[1])) { const x = myRule(m[2]); if (x != null) r = m[1] + x + (m[3] || ''); }
+  }
+  return lead + (r == null ? myUnits(s) : r) + tail;
+}
+
+/** หาคำแปลคำแนะนำสแกน (ใช้ตาราง SCAN_HINTS) */
+function myHintOf(th) {
+  const plain = String(th).replace(/<[^>]*>/g, '').replace(EMOJI_RE, '').replace(/\s+/g, ' ').trim();
+  const hit = SCAN_HINTS.find(x => plain.indexOf(x[0]) === 0);
+  return hit ? hit[2] : '';
+}
+
+/* ---------- ใช้คำแปลกับหน้าจอ ---------- */
+const I18N_ROOTS = ['#view-home', '#view-scan', '#view-result', '#loading', '#toast'];
+function i18nSkip(node) {
+  const p = node.parentElement;
+  return !p || p.closest('[data-noi18n],[lang="my"],script,style,svg,#view-admin,.modal');
+}
+function i18nApplyNode(node) {
+  if (i18nSkip(node)) return;
+  const cur = node.nodeValue;
+  if (state.lang === 'my') {
+    if (node.__i18nOut === cur) return;                        // แปลไปแล้ว
+    node.__i18nOrig = cur;
+    const out = myTr(cur);
+    node.__i18nOut = out;
+    if (out !== cur) node.nodeValue = out;
+  } else if (node.__i18nOrig != null && node.__i18nOut === cur) {
+    node.nodeValue = node.__i18nOrig;                          // กลับเป็นภาษาไทย
+    node.__i18nOut = node.__i18nOrig = null;
+  }
+}
+function i18nApplyTree(root) {
+  if (!root) return;
+  if (root.nodeType === 3) return i18nApplyNode(root);
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let n; while ((n = w.nextNode())) i18nApplyNode(n);
+}
+function i18nApplyAll() { I18N_ROOTS.forEach(sel => i18nApplyTree($(sel))); }
+
+function setLang(lang) {
+  state.lang = lang === 'my' ? 'my' : 'th';
+  try { localStorage.setItem('faceatt_lang', state.lang); } catch (e) { /* โหมดส่วนตัว: ไม่จำก็ได้ */ }
+  document.documentElement.setAttribute('data-lang', state.lang);
+  const b = $('#btn-lang');
+  if (b) {
+    // ปุ่มแสดง "ภาษาที่จะเปลี่ยนไป": ตอนนี้ไทย → แสดงธงพม่า / ตอนนี้พม่า → แสดงธงไทย
+    b.innerHTML = state.lang === 'th' ? FLAGS.my : FLAGS.th;
+    b.setAttribute('aria-label', state.lang === 'th' ? 'ဗမာဘာသာ (Myanmar)' : 'ภาษาไทย');
+  }
+  i18nApplyAll();
+  if (typeof tickClock === 'function') tickClock();
+  if (state.scan && state.scan.lastIns) setInstruction(state.scan.lastIns[0], state.scan.lastIns[1]);
+}
+
+const FLAGS = {
+  th: '<svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#A51931"/><rect y="3.33" width="30" height="13.34" fill="#F4F5F8"/><rect y="6.67" width="30" height="6.66" fill="#2D2A4A"/></svg>',
+  my: '<svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="6.67" fill="#FECB00"/><rect y="6.67" width="30" height="6.67" fill="#34B233"/><rect y="13.33" width="30" height="6.67" fill="#EA2839"/><polygon fill="#FFFFFF" points="15,3.2 16.9,8.9 22.9,8.9 18.05,12.45 19.9,18.1 15,14.6 10.1,18.1 11.95,12.45 7.1,8.9 13.1,8.9"/></svg>'
+};
+
+function initLang() {
+  let saved = 'th';
+  try { saved = localStorage.getItem('faceatt_lang') || 'th'; } catch (e) { /* ใช้ภาษาไทย */ }
+  // คอยแปลข้อความใหม่ที่โปรแกรมเขียนลงหน้าจอ (เฉพาะตอนเลือกภาษาพม่า)
+  const mo = new MutationObserver(list => {
+    if (state.lang !== 'my') return;
+    list.forEach(m => {
+      if (m.type === 'characterData') i18nApplyNode(m.target);
+      else m.addedNodes.forEach(n => i18nApplyTree(n));
+    });
+  });
+  I18N_ROOTS.forEach(sel => { const el = $(sel); if (el) mo.observe(el, { childList: true, subtree: true, characterData: true }); });
+  $('#btn-lang').addEventListener('click', () => setLang(state.lang === 'th' ? 'my' : 'th'));
+  setLang(saved);
+}
+
 function setRing(cls) { $('#cam-ring').className = 'cam-ring' + (cls ? ' ' + cls : ''); }
 
 async function scanLoop() {
@@ -1648,6 +1914,8 @@ async function loadAdmin() {
     $('#btn-admin-logout').hidden = false;
     if (!$('#log-date').value) $('#log-date').value = d.today;
     if (!$('#pay-month').value) setDefaultPayPeriod(d.today);
+    if (!$('#sal-month').value) $('#sal-month').value = d.today.slice(0, 7);
+    fillSalaryEmployees(d);
     renderLocations();
     renderSettings();
     renderEmployees();
@@ -1964,6 +2232,54 @@ async function makePayroll() {
           <div class="item" style="padding:9px 12px"><div class="item-top">
             <div><div class="item-title">${esc(x.name)} <span class="item-sub">(${esc(x.id)})</span></div>
               <div class="item-sub">${h1(x.days)} วัน × ${n(x.wage)} • OT ${h1(x.otHours)} ชม. × ${x.otRate}</div></div>
+            <b>${n(x.total)}</b></div></div>`).join('')}
+        </div>
+      </div>`;
+    toast('สร้าง PDF เรียบร้อย', 'ok');
+  } catch (e) { if (!handleAuthError(e)) toast(e.message, 'err', 6000); }
+  finally { hideLoading(); }
+}
+
+/* ---------- สรุปเงินเดือน (พนักงานรายเดือน) ---------- */
+function fillSalaryEmployees(d) {
+  const sel = $('#sal-emp');
+  const keep = sel.value;
+  const list = (d.employees || []).filter(e => e.inMaster && e.empType === 'รายเดือน');
+  sel.innerHTML = '<option value="">ทุกคน (พนักงานรายเดือน ' + list.length + ' คน)</option>' +
+    list.map(e => '<option value="' + esc(e.id) + '">' + esc(e.name) + ' (' + esc(e.id) + ')' + (e.active ? '' : ' — ' + esc(e.status)) + '</option>').join('');
+  if (keep && list.some(e => e.id === keep)) sel.value = keep;
+}
+
+async function makeSalary() {
+  const v = $('#sal-month').value;
+  if (!v) return toast('กรุณาเลือกเดือน', 'err');
+  const [year, month] = v.split('-').map(Number);
+  showLoading('กำลังคำนวณเงินเดือนและสร้าง PDF...');
+  try {
+    const r = await api('salaryReport', { token: state.adminToken, year, month, employeeId: $('#sal-emp').value });
+    const n = x => Number(x || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const h1 = x => (Math.round(x * 100) / 100).toString();
+    $('#salary-result').innerHTML = `
+      <div class="card">
+        <div class="item-top"><div><div class="item-title">เดือน ${esc(r.label)}</div>
+          <div class="item-sub">${r.single ? 'รายคน' : r.rows.length + ' คน'}</div></div></div>
+        <div class="stats pay-stats" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:12px 0">
+          <div class="stat"><b>${n(r.totals.salary)}</b><span>รวมเงินเดือน</span></div>
+          <div class="stat"><b>${n(r.totals.otPay)}</b><span>รวม OT</span></div>
+          <div class="stat"><b style="color:var(--primary)">${n(r.totals.total)}</b><span>รวมทั้งหมด</span></div>
+        </div>
+        <div class="item-actions" style="margin:0 0 10px">
+          <a class="btn primary sm" style="text-decoration:none" href="${esc(r.pdfUrl)}" target="_blank" rel="noopener">📄 เปิด PDF</a>
+          <a class="btn sm" style="text-decoration:none" href="${esc(r.sheetUrl)}" target="_blank" rel="noopener">📊 เปิดตารางในชีต</a>
+        </div>
+        ${r.warnings.length ? `<div class="item" style="border-color:#fecaca;background:#fef2f2;margin-bottom:10px">
+          <div class="item-title" style="color:var(--red)">⚠️ ต้องตรวจสอบก่อนจ่าย (${r.warnings.length})</div>
+          ${r.warnings.map(w => `<div class="item-sub">• ${esc(w)}</div>`).join('')}</div>` : ''}
+        <div class="list">${r.rows.map(x => `
+          <div class="item" style="padding:9px 12px"><div class="item-top">
+            <div><div class="item-title">${esc(x.name)} <span class="item-sub">(${esc(x.id)})</span></div>
+              <div class="item-sub">เงินเดือน ${n(x.salary)} • OT ${h1(x.otHours)} ชม. × ${x.otRate} = ${n(x.otPay)}</div>
+              <div class="item-sub">มาทำงาน ${h1(x.days)} วัน • มาสาย ${x.lateCount} ครั้ง (${x.lateMin} นาที)</div></div>
             <b>${n(x.total)}</b></div></div>`).join('')}
         </div>
       </div>`;
