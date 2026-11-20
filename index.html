@@ -334,7 +334,7 @@ html body #view-home .action-btn .a-time{font-size:calc(var(--u)*1.7);padding:ca
       <button class="action-btn t-CLOCK_IN" data-type="CLOCK_IN"><span class="a-icon svg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l4-4-4-4"/><path d="M14 12H4"/></svg></span><span class="a-text"><span class="a-label">เข้างาน</span><span class="a-sub">Clock-in</span><span class="a-time" id="time-in"></span></span></button>
       <button class="action-btn t-CLOCK_OUT" data-type="CLOCK_OUT"><span class="a-icon svg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4"/><path d="M16 16l4-4-4-4"/><path d="M20 12H10"/></svg></span><span class="a-text"><span class="a-label">เลิกงาน</span><span class="a-sub">Clock-out</span><span class="a-time" id="time-out"></span></span></button>
     </div>
-    <p class="hint">ตรวจ GPS ➜ สแกนใบหน้า ➜ ตรวจคนจริง ➜ บันทึกเวลา<br>เข้า-ออกได้หลายรอบ • เกิน 8 ชม./วัน (หักพัก) คิด OT อัตโนมัติ</p>
+    <p class="hint">ตรวจ GPS ➜ สแกนใบหน้า ➜ ตรวจคนจริง ➜ บันทึกเวลา<br>เข้า-ออกได้หลายรอบ • เกิน 8 ชม./วัน (หักพัก) คิด OT อัตโนมัติ <span id="app-ver" style="opacity:.55;white-space:nowrap"></span></p>
   </main>
 </section>
 
@@ -482,7 +482,10 @@ const CONFIG = {
   SCAN_TIMEOUT_MS: 45000,     // หมดเวลาการสแกน
   GPS_MAX_AGE_MS: 30000,      // ตำแหน่งต้องไม่เก่ากว่า 30 วินาที
   SAME_FACE_MAX_DIST: 0.55,   // ใบหน้าตอนเริ่ม-ตอนจบสแกนต้องเป็นคนเดียวกัน
-  BOTTOM_GAP_PX: 16,          // เว้นขอบล่างของหน้าจอ (px) กันแถบเมนูเบราว์เซอร์บัง ถ้ายังบังให้เพิ่มเป็น 24-40
+  APP_VERSION: '20.11-r5',      // แสดงมุมล่างหน้าแรก ใช้เช็กว่ามือถือโหลดไฟล์ล่าสุดแล้ว
+  BOTTOM_GAP_PX: 16,          // เว้นขอบล่างของหน้าจอ (px) กันแถบเมนูเบราว์เซอร์บัง
+  BOTTOM_GAP_SAMSUNG_PX: 64,  // Samsung Internet (แถบเมนูล่างสูงประมาณ 56px) ถ้ายังบังให้เพิ่ม
+  BOTTOM_GAP_INAPP_PX: 48,    // เปิดจากในแอป LINE / Facebook
   REGISTER_SAMPLES: 3,        // จำนวนภาพตัวอย่างใบหน้าตอนลงทะเบียน (กดถ่ายเองทีละภาพ)
   REG_EAR_MIN: 0.2,           // ค่าการเปิดตาขั้นต่ำตอนถ่ายลงทะเบียน (ต่ำกว่านี้ = หลับตา/กะพริบ)
   REG_PITCH_MIN: 0.22,        // ช่วงองศาเงย/ก้มที่ยอมรับ (หน้าตรงประมาณ 0.35-0.40)
@@ -555,6 +558,15 @@ function api(action, payload) {
 /* =====================================================================
  * เริ่มต้นระบบ
  * ===================================================================*/
+/* ระยะเว้นขอบล่าง: Samsung Internet และเบราว์เซอร์ในแอป (LINE/Facebook) มีแถบเมนูด้านล่างลอยทับหน้าเว็บ
+   และไม่หักความสูงแถบนั้นออกให้ จึงต้องเว้นเพิ่มเท่าความสูงแถบ */
+function bottomGap() {
+  const ua = navigator.userAgent || '';
+  if (/SamsungBrowser/i.test(ua)) return CONFIG.BOTTOM_GAP_SAMSUNG_PX;
+  if (/Line\/|FBAN|FBAV|Instagram/i.test(ua)) return CONFIG.BOTTOM_GAP_INAPP_PX;
+  return CONFIG.BOTTOM_GAP_PX;
+}
+
 /* วัดความสูงจอที่มองเห็นจริง แล้วตั้งค่า --app-h ให้ CSS (กันแถบเมนูเบราว์เซอร์บังปุ่มด้านล่าง) */
 function fitToScreen() {
   const root = document.documentElement;
@@ -566,10 +578,11 @@ function fitToScreen() {
   if (!cands.length) return;
   const h = Math.floor(Math.min.apply(null, cands));
   root.style.setProperty('--app-h', h + 'px');
-  root.style.setProperty('--bar-gap', CONFIG.BOTTOM_GAP_PX + 'px');
+  root.style.setProperty('--bar-gap', bottomGap() + 'px');
   root.classList.add('app-h');
 }
 fitToScreen();
+document.addEventListener('DOMContentLoaded', () => { const v = $('#app-ver'); if (v) v.textContent = '• v' + CONFIG.APP_VERSION; });
 window.addEventListener('resize', fitToScreen);
 window.addEventListener('orientationchange', () => setTimeout(fitToScreen, 300));
 if (window.visualViewport) window.visualViewport.addEventListener('resize', fitToScreen);
@@ -981,6 +994,7 @@ async function scanLoop() {
     return showResult(false, 'หมดเวลาการสแกน', 'ไม่สามารถยืนยันใบหน้าได้ภายในเวลาที่กำหนด กรุณาลองใหม่ในที่มีแสงสว่าง และมองกล้องตรงๆ');
   }
   const video = $('#video');
+  if (s.busy && s.mode === 'register') { s.timer = setTimeout(scanLoop, 120); return; }   // กำลังตรวจภาพที่ถ่าย รอก่อน
   let dets = [];
   // ช่วงตรวจกะพริบตา ใช้ภาพเล็กลงเพื่อให้วิเคราะห์ได้หลายเฟรมต่อวินาที จับจังหวะตาปิดได้ทัน
   const blinking = s.phase === 'challenge' && s.challenges[s.idx] === 'BLINK';
@@ -1307,17 +1321,12 @@ async function takeShot(s) {
   setRing('busy');
   setInstruction('กำลังตรวจภาพ...');
   const video = $('#video');
+  await sleep(150);                       // รอให้ลูปตรวจจับรอบปัจจุบันจบก่อน แล้วค่อยใช้ AI กับภาพนิ่ง
   const canvas = snapshot(video);
-  let det = null;
-  try {
-    det = await faceapi
-      .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions({ inputSize: CONFIG.DESCRIPTOR_INPUT, scoreThreshold: 0.5 }))
-      .withFaceLandmarks()
-      .withFaceDescriptor();
-  } catch (e) { console.warn(e); }
+  const det = await detectStill(canvas);
   s.busy = false;
   if (state.scan !== s) return;
-  if (!det) { toast('ภาพนี้ไม่พบใบหน้า ลองถ่ายใหม่', 'err'); s.stable = 0; return; }
+  if (!det) { toast('ภาพนี้หาใบหน้าไม่เจอ — ถือมือถือนิ่งๆ ให้หน้าอยู่กลางกรอบ แล้วกดใหม่', 'err'); s.stable = 0; return; }
   // ตรวจภาพนิ่งซ้ำ: กันกรณีกะพริบตา/ขยับหน้าตอนกดพอดี
   const a = analyzeFace(det, canvas);
   const why = regProblem(a, s.earMax);
@@ -1332,6 +1341,24 @@ async function takeShot(s) {
     photo: makePhoto(canvas, ['ลงทะเบียน: ' + s.employee.employeeName, thaiDateTime()])   // ภาพแรกที่เหลืออยู่ = รูปหลักฐาน
   });
   renderShots(s);
+}
+
+/**
+ * หาใบหน้าในภาพนิ่ง (ลองหลายขนาด/เกณฑ์ เพราะบางเครื่อง แสงน้อย หรือกล้องความละเอียดสูง หาไม่เจอในรอบแรก)
+ * ขนาดภาพที่ส่งให้ AI ต้องหาร 32 ลงตัว
+ */
+async function detectStill(canvas) {
+  const tries = [[CONFIG.DESCRIPTOR_INPUT, 0.4], [320, 0.35], [512, 0.3], [224, 0.3]];
+  for (const [size, score] of tries) {
+    try {
+      const det = await faceapi
+        .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions({ inputSize: size, scoreThreshold: score }))
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      if (det) return det;
+    } catch (e) { console.warn('detectStill', size, e); }
+  }
+  return null;
 }
 
 /** ครอปเฉพาะใบหน้าเป็นภาพเล็ก (กลับด้านเหมือนกระจก) ใช้แสดงให้ตรวจดู */
